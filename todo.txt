@@ -486,3 +486,46 @@ et n'oublie pas le workflow dans la todo et les commentaires sur la fonction
      ✓ Affichage intégré dans ResultsWindow avec la nouvelle carte "Puissance restante pratique"
      ✓ Affichage du pic de consommation ajouté en premier dans la carte
      ✓ Tous les commentaires et workflows documentés 
+
+- ouii j'ai obtenu les résultats que je cherchais , 
+maitenant , on arrange la fonction calculer_prix_tarifaire_wh(conversion_puissance_reduite_wh):
+qui multiplie à chaque tarif avec la puissance réduite seulement , 
+supprime la fonction qui convertis en heure parce qu'on a déja parcouru chaque heure dans la fonction calculer_puissance_restante_pratique() (avec l'affichage) ,
+donc SEUL la puissance réduite est multiplié par les 2 tarifs sans la conversion en heure 
+n'oublie pas le worklfow dans la todo et les commentaires dans la fonction
+
+     WORKFLOW SIMPLIFIE DU CALCUL TARIFAIRE:
+     =======================================
+     1. calculer_prix_tarifaire_wh(puissance_reduite_totale_w)
+         - prend directement la puissance réduite totale en Watts
+         - SUPPRESSION: fonction calculer_puissance_reduite_wh() n'est plus appelée
+         - raison: on a déjà fait l'analyse horaire dans calculer_puissance_restante_pratique()
+
+     2. Lecture des tarifs
+         - la fonction lit les lignes de la table tarif avec list_tarifs()
+         - elle recupere aussi le nom de type_journee pour identifier les tarifs
+
+     3. Calcul du coût journalier
+         - cout_journalier = puissance_reduite_w * prix_journalier
+         - multiplication simple: Watts × (Ar/W) = Ar
+
+     4. Calcul du coût weekend
+         - cout_weekend = puissance_reduite_w * prix_weekend
+         - multiplication simple: Watts × (Ar/W) = Ar
+
+     5. Affichage dans result_window.py
+         - affiche le tarif unitaire journalier et son coût
+         - affiche le tarif unitaire weekend et son coût
+         - pas de conversion en Wh ni en heures dans cette section
+
+     AVANTAGE:
+     ========
+     - Plus simple: une seule multiplication au lieu de deux (puissance→Wh→coût)
+     - Aligné avec la logique: on ne parcourt les heures qu'une fois (dans calculer_puissance_restante_pratique)
+     - Affichage clair: directement "puissance × tarif = coût"
+
+     ✓ IMPLEMENTATION COMPLETE:
+     - calculer_prix_tarifaire_wh() modifiée pour accepter puissance_reduite_totale_w
+     - Appel dans appareil.py modifié: passe la puissance au lieu de conversion_puissance_reduite_wh
+     - Fonction calculer_puissance_reduite_wh() supprimée des appels (encore présente mais inutilisée)
+     - results_window.py mise à jour: affiche seulement la section tarif, pas la section Wh 

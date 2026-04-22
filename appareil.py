@@ -499,19 +499,12 @@ class AppareilApp:
                 )
             )
 
-            # Convert the reduced practical remaining power into Wh so the
-            # result window can display an energy-oriented value as requested.
-            resultat["conversion_puissance_reduite_wh"] = (
-                calculer_puissance_reduite_wh(
-                    resultat["puissance_restante_pratique"][
-                        "puissance_restante_totale_w"
-                    ]
-                )
-            )
-
-            # Compute the journalier/weekend tariff costs from the Wh value.
+            # Compute the journalier/weekend tariff costs from the reduced power.
+            # Pass the total remaining practical power directly to get cost scenarios.
             resultat["prix_tarifaire_wh"] = calculer_prix_tarifaire_wh(
-                resultat["conversion_puissance_reduite_wh"]
+                resultat["puissance_restante_pratique"][
+                    "puissance_restante_totale_w"
+                ]
             )
 
             # Persist the current calculation for later reference.

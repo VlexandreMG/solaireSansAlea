@@ -212,43 +212,8 @@ class ResultsWindow(tk.Toplevel):
                 highlight=True,
             )
 
-        # Display the Wh conversion requested for reduced practical power.
-        # This block reads the payload added in AppareilApp.calculer and shows:
-        # - reduced power in W/kW
-        # - total usage hours
-        # - converted energy in Wh/kWh
-        conversion = self._resultats.get("conversion_puissance_reduite_wh")
-        if conversion:
-            self._build_section(
-                container,
-                "Conversion puissance reduite en wattheure",
-                CARD_COLOR,
-                TEXT_COLOR,
-                [
-                    (
-                        "Puissance reduite",
-                        conversion["puissance_reduite_w"],
-                        "W",
-                        "kW",
-                    ),
-                    (
-                        "Heures totales utilisees",
-                        conversion["heures_totales_utilisation_h"],
-                        "h",
-                        "h",
-                    ),
-                    (
-                        "Energie reduite",
-                        conversion["energie_reduite_wh"],
-                        "Wh",
-                        "kWh",
-                    ),
-                ],
-                highlight=True,
-            )
-
         # Display the tariff outputs for journalier and weekend.
-        # The Wh value is multiplied by each tariff unit price.
+        # The reduced power (W) is multiplied by each tariff unit price (Ar/W).
         prix_tarifaire = self._resultats.get("prix_tarifaire_wh")
         if prix_tarifaire:
             self._build_section(

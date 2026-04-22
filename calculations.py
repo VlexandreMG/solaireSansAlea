@@ -314,64 +314,84 @@ def calculer_puissance_reduite_wh(puissance_reduite_w):
     }
 
 
-def calculer_prix_tarifaire_wh(conversion_puissance_reduite_wh):
+def calculer_prix_tarifaire_wh(puissance_reduite_totale_w):
     """
-    Calculate the cost of Wh energy for the journalier and weekend tariffs.
+    Calculate the cost of reduced power for the journalier and weekend tariffs.
+
+    This function takes the total remaining practical power (in Watts) and
+    multiplies it by the journalier and weekend unit tariff rates to give
+    two cost scenarios.
 
     Workflow:
-    1. Read the Wh conversion payload already computed by the app.
-    2. Load tariff rows from the database.
-    3. Resolve the unit price for the journalier and weekend tariffs.
-    4. Multiply the Wh energy by each tariff price.
-    5. Return the detailed prices and costs for both tariffs.
+    1. Extract the reduced power value in Watts
+    2. Load tariff rows from the database via list_tarifs()
+    3. Normalize tariff names to identify journalier and weekend rates
+    4. Multiply the reduced power by each tariff unit price
+       - Cost = Power (W) × Tariff (Ar/W)
+    5. Return the unit prices and total costs for both tariff scenarios
 
     Args:
-        conversion_puissance_reduite_wh (dict): Payload returned by
-            calculer_puissance_reduite_wh(...).
+        puissance_reduite_totale_w (float): Total remaining practical power in Watts
+            (from calculer_puissance_restante_pratique["puissance_restante_totale_w"])
 
     Returns:
-        dict: Unit prices and total costs for journalier and weekend.
+        dict: Unit prices and total costs for journalier and weekend:
+            - 'prix_journalier': Unit price for journalier (Ar/W)
+            - 'cout_journalier': Total cost if using journalier tariff (Ar)
+            - 'prix_weekend': Unit price for weekend (Ar/W)
+            - 'cout_weekend': Total cost if using weekend tariff (Ar)
     """
 
-    energie_wh = float(conversion_puissance_reduite_wh.get("energie_reduite_wh", 0.0))
+    # Step 1: Convert input power to float for safe calculation
+    puissance_reduite_w = float(puissance_reduite_totale_w)
 
+    # Step 2: Load all tariff rows from the database
     tarifs = list_tarifs()
-    prix_par_nom = {}
-    prix_par_ordre = []
+    prix_par_nom = {}    # Map normalized names to prices
+    prix_par_ordre = []  # Fallback: prices in row order
 
+    # Step 3: Build price lookup maps
     for _tarif_id, _type_journee_id, nom_type_journee, prix in tarifs:
         prix_float = float(prix)
         prix_par_ordre.append(prix_float)
 
+        # Normalize the tariff type name (e.g., "Journalier" → "JOURNALIER")
         nom_normalise = str(nom_type_journee or "").strip().upper()
         if nom_normalise:
             prix_par_nom[nom_normalise] = prix_float
 
+    # Helper function to find a price by label or fallback to row order
     def _resolve_price(label, fallback_index):
+        # Try exact match on label variations
         candidats = [label, label.upper(), label.lower()]
         for candidat in candidats:
             prix = prix_par_nom.get(str(candidat).upper())
             if prix is not None:
                 return prix
 
+        # Fallback: use row order (1st or 2nd tariff)
         if len(prix_par_ordre) >= fallback_index:
             return prix_par_ordre[fallback_index - 1]
 
         return 0.0
 
+    # Step 4: Resolve prices for each tariff type
     prix_journalier = _resolve_price("journalier", 1)
     prix_weekend = _resolve_price("weekend", 2)
 
-    cout_journalier = energie_wh * prix_journalier
-    cout_weekend = energie_wh * prix_weekend
+    # Step 5: Multiply reduced power by each tariff rate
+    # Cost = Power (W) × Tariff price (Ar/W) = Total cost (Ar)
+    cout_journalier = puissance_reduite_w * prix_journalier
+    cout_weekend = puissance_reduite_w * prix_weekend
 
+    # Step 6: Clamp negative costs to zero (safety check)
     if cout_journalier < 0:
         cout_journalier = 0.0
     if cout_weekend < 0:
         cout_weekend = 0.0
 
+    # Step 7: Return tariff scenario results
     return {
-        "energie_wh": energie_wh,
         "prix_journalier": prix_journalier,
         "prix_weekend": prix_weekend,
         "cout_journalier": cout_journalier,

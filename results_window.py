@@ -213,7 +213,7 @@ class ResultsWindow(tk.Toplevel):
             )
 
         # Display the tariff outputs for journalier and weekend.
-        # The reduced power (W) is multiplied by each tariff unit price (Ar/W).
+        # Supports pack pricing baseline (nb): e.g., 2Wh for 1000Ar.
         prix_tarifaire = self._resultats.get("prix_tarifaire_wh")
         if prix_tarifaire:
             self._build_section(
@@ -223,7 +223,19 @@ class ResultsWindow(tk.Toplevel):
                 TEXT_COLOR,
                 [
                     (
-                        "Tarif journalier",
+                        "Tarif journalier (pack)",
+                        prix_tarifaire["prix_journalier_pack"],
+                        "Ar",
+                        "Ar",
+                    ),
+                    (
+                        "Base journalier",
+                        prix_tarifaire["nb_journalier_wh"],
+                        "Wh",
+                        "Wh",
+                    ),
+                    (
+                        "Tarif journalier unitaire",
                         prix_tarifaire["prix_journalier"],
                         "Ar/Wh",
                         "Ar/Wh",
@@ -235,7 +247,19 @@ class ResultsWindow(tk.Toplevel):
                         "Ar",
                     ),
                     (
-                        "Tarif weekend",
+                        "Tarif weekend (pack)",
+                        prix_tarifaire["prix_weekend_pack"],
+                        "Ar",
+                        "Ar",
+                    ),
+                    (
+                        "Base weekend",
+                        prix_tarifaire["nb_weekend_wh"],
+                        "Wh",
+                        "Wh",
+                    ),
+                    (
+                        "Tarif weekend unitaire",
                         prix_tarifaire["prix_weekend"],
                         "Ar/Wh",
                         "Ar/Wh",

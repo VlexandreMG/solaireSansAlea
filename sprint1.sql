@@ -55,5 +55,6 @@ CREATE TABLE type_journee (
 CREATE TABLE tarif (
     id INT NOT NULL PRIMARY KEY,
     id_type_journee INT NOT NULL,
-    prix FLOAT NOT NULL
+    prix FLOAT NOT NULL, 
+    nb INT NOT NULL
 ); 

@@ -316,85 +316,91 @@ def calculer_puissance_reduite_wh(puissance_reduite_w):
 
 def calculer_prix_tarifaire_wh(puissance_reduite_totale_w):
     """
-    Calculate the cost of reduced power for the journalier and weekend tariffs.
+    Calculate the tariff costs with support for a quantity baseline (nb).
 
-    This function takes the total remaining practical power (in Watts) and
-    multiplies it by the journalier and weekend unit tariff rates to give
-    two cost scenarios.
+    Example supported by this function:
+    - if a tariff row says 2Wh for 1000 Ar, then unit price is 500 Ar/Wh
+    - final cost is computed with that unit price
 
     Workflow:
-    1. Extract the reduced power value in Watts
-    2. Load tariff rows from the database via list_tarifs()
-    3. Normalize tariff names to identify journalier and weekend rates
-    4. Multiply the reduced power by each tariff unit price
-       - Cost = Power (W) × Tariff (Ar/W)
-    5. Return the unit prices and total costs for both tariff scenarios
+    1. Read reduced power value used as pricing quantity
+    2. Load tariff rows from the database including `prix` and `nb`
+    3. Resolve journalier/weekend rows by name (or by row order fallback)
+    4. Convert each tariff row to a unit price using:
+       - prix_unitaire = prix_pack / nb
+    5. Compute costs:
+       - cout = quantite * prix_unitaire
+    6. Return both pack info and computed costs for display
 
     Args:
-        puissance_reduite_totale_w (float): Total remaining practical power in Watts
-            (from calculer_puissance_restante_pratique["puissance_restante_totale_w"])
+        puissance_reduite_totale_w (float): Total remaining practical power.
 
     Returns:
-        dict: Unit prices and total costs for journalier and weekend:
-            - 'prix_journalier': Unit price for journalier (Ar/W)
-            - 'cout_journalier': Total cost if using journalier tariff (Ar)
-            - 'prix_weekend': Unit price for weekend (Ar/W)
-            - 'cout_weekend': Total cost if using weekend tariff (Ar)
+        dict: Tariff calculation payload with quantity-aware pricing.
     """
 
-    # Step 1: Convert input power to float for safe calculation
-    puissance_reduite_w = float(puissance_reduite_totale_w)
+    # Step 1: Normalize input quantity for pricing.
+    quantite_reduite = float(puissance_reduite_totale_w)
 
-    # Step 2: Load all tariff rows from the database
+    # Step 2: Load tariffs; each row now includes pack size `nb`.
     tarifs = list_tarifs()
-    prix_par_nom = {}    # Map normalized names to prices
-    prix_par_ordre = []  # Fallback: prices in row order
+    tarifs_par_nom = {}
+    tarifs_par_ordre = []
 
-    # Step 3: Build price lookup maps
-    for _tarif_id, _type_journee_id, nom_type_journee, prix in tarifs:
-        prix_float = float(prix)
-        prix_par_ordre.append(prix_float)
+    for _tarif_id, _type_journee_id, nom_type_journee, prix, nb in tarifs:
+        prix_pack = float(prix)
+        quantite_pack = float(nb) if float(nb) > 0 else 1.0
 
-        # Normalize the tariff type name (e.g., "Journalier" → "JOURNALIER")
+        ligne_tarif = {
+            "prix_pack": prix_pack,
+            "nb": quantite_pack,
+        }
+        tarifs_par_ordre.append(ligne_tarif)
+
         nom_normalise = str(nom_type_journee or "").strip().upper()
         if nom_normalise:
-            prix_par_nom[nom_normalise] = prix_float
+            tarifs_par_nom[nom_normalise] = ligne_tarif
 
-    # Helper function to find a price by label or fallback to row order
-    def _resolve_price(label, fallback_index):
-        # Try exact match on label variations
+    # Step 3: Resolve a tariff row by label, then fallback by index.
+    def _resolve_tarif(label, fallback_index):
         candidats = [label, label.upper(), label.lower()]
         for candidat in candidats:
-            prix = prix_par_nom.get(str(candidat).upper())
-            if prix is not None:
-                return prix
+            tarif = tarifs_par_nom.get(str(candidat).upper())
+            if tarif is not None:
+                return tarif
 
-        # Fallback: use row order (1st or 2nd tariff)
-        if len(prix_par_ordre) >= fallback_index:
-            return prix_par_ordre[fallback_index - 1]
+        if len(tarifs_par_ordre) >= fallback_index:
+            return tarifs_par_ordre[fallback_index - 1]
 
-        return 0.0
+        return {"prix_pack": 0.0, "nb": 1.0}
 
-    # Step 4: Resolve prices for each tariff type
-    prix_journalier = _resolve_price("journalier", 1)
-    prix_weekend = _resolve_price("weekend", 2)
+    tarif_journalier = _resolve_tarif("journalier", 1)
+    tarif_weekend = _resolve_tarif("weekend", 2)
 
-    # Step 5: Multiply reduced power by each tariff rate
-    # Cost = Power (W) × Tariff price (Ar/W) = Total cost (Ar)
-    cout_journalier = puissance_reduite_w * prix_journalier
-    cout_weekend = puissance_reduite_w * prix_weekend
+    # Step 4: Convert pack pricing to unit pricing.
+    # Example: 2Wh for 1000 Ar -> 500 Ar/Wh
+    prix_journalier = tarif_journalier["prix_pack"] / tarif_journalier["nb"]
+    prix_weekend = tarif_weekend["prix_pack"] / tarif_weekend["nb"]
 
-    # Step 6: Clamp negative costs to zero (safety check)
+    # Step 5: Compute costs from quantity × unit price.
+    cout_journalier = quantite_reduite * prix_journalier
+    cout_weekend = quantite_reduite * prix_weekend
+
     if cout_journalier < 0:
         cout_journalier = 0.0
     if cout_weekend < 0:
         cout_weekend = 0.0
 
-    # Step 7: Return tariff scenario results
+    # Step 6: Return full details so UI can show both pack and unit pricing.
     return {
+        "quantite_reduite": quantite_reduite,
         "prix_journalier": prix_journalier,
         "prix_weekend": prix_weekend,
         "cout_journalier": cout_journalier,
         "cout_weekend": cout_weekend,
+        "prix_journalier_pack": tarif_journalier["prix_pack"],
+        "prix_weekend_pack": tarif_weekend["prix_pack"],
+        "nb_journalier_wh": tarif_journalier["nb"],
+        "nb_weekend_wh": tarif_weekend["nb"],
     }
  

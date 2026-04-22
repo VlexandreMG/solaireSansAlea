@@ -529,3 +529,41 @@ n'oublie pas le worklfow dans la todo et les commentaires dans la fonction
      - Appel dans appareil.py modifié: passe la puissance au lieu de conversion_puissance_reduite_wh
      - Fonction calculer_puissance_reduite_wh() supprimée des appels (encore présente mais inutilisée)
      - results_window.py mise à jour: affiche seulement la section tarif, pas la section Wh 
+
+- Okee tout marche , mais un dernier détail , 
+si on nous demande 2Wh pour 1000ar (colomne nb) , 
+je veux que tu règles la fonction calculer_prix_tarifaire_wh(conversion_puissance_reduite_wh) 
+pour qu'il prenne en charge ce paramètre 
+n'oublie pas le workflow dans la todo et les commentaires dans la fonction 
+
+     WORKFLOW TARIFAIRE AVEC COLONNE NB (EX: 2Wh POUR 1000Ar):
+     =========================================================
+     1. Lecture des tarifs avec `nb`
+         - list_tarifs() lit: id, id_type_journee, nom, prix, nb
+         - `nb` represente la quantité de base en Wh du prix
+
+     2. Conversion pack -> prix unitaire
+         - formule: prix_unitaire = prix / nb
+         - exemple: 1000 Ar pour 2Wh -> prix_unitaire = 500 Ar/Wh
+
+     3. Calcul du coût final par tarif
+         - cout_journalier = quantite_reduite * prix_unitaire_journalier
+         - cout_weekend = quantite_reduite * prix_unitaire_weekend
+
+     4. Affichage dans result_window.py
+         - afficher le prix pack (Ar)
+         - afficher la base pack (nb en Wh)
+         - afficher le prix unitaire (Ar/Wh)
+         - afficher le coût final (Ar)
+
+     5. Robustesse
+         - si nb <= 0, utiliser nb = 1 pour eviter division par zero
+         - si tarif non trouvé par nom, fallback par ordre des lignes
+
+     RESULTAT:
+     ========
+     - Le système gère correctement les tarifs de type "2Wh pour 1000Ar"
+     - Le calcul est désormais proportionnel a la quantité `nb` définie en base
+
+- Majorée ny heure de pointe de 12 à 14h et 17 à 19 . 
+à cette heure , mitombo ny vidin'courant , (exemple) jour ouvrable miakatra 50% , jour weekend miakatra 30%  

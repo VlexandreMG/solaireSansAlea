@@ -128,3 +128,93 @@ def calculer_puissance_restante(puissance_max_w):
         "puissance_utilisee_w": puissance_utilisee_w,
         "puissance_restante_w": puissance_restante_w,
     }
+
+
+def calculer_puissance_restante_pratique(puissance_max_w):
+    """
+    Calculate the practical remaining power by tranche.
+
+    This version applies the practical sizing rules from the notes:
+    - 40% of the panel power is really usable in normal daytime operation
+    - the late-afternoon tranche keeps only 50% of that usable power
+    - the night tranche is considered battery-driven, so it is tracked separately
+
+    Workflow:
+    1. Convert the maximum power to float
+    2. Load all device usages from the database
+    3. Group the total consumed power by tranche
+    4. Compute the practical available power for each tranche
+    5. Subtract the devices consumed in that tranche
+    6. Clamp negative values to zero
+    7. Return a detailed dictionary with tranche totals and remaining values
+
+    Args:
+        puissance_max_w (float): Maximum panel power in Watts
+
+    Returns:
+        dict: Practical sizing details by tranche and in total
+    """
+
+    puissance_max_w = float(puissance_max_w)
+
+    puissance_t1_w = 0.0
+    puissance_t2_w = 0.0
+    puissance_t3_w = 0.0
+
+    utilisations = list_utilisations()
+
+    for (
+        _util_id,
+        _appareil_id,
+        _nom,
+        puissance_w,
+        _tranche_id,
+        label,
+        _duree_h,
+    ) in utilisations:
+        puissance_ajoutee_w = float(puissance_w)
+
+        if label == "T1":
+            puissance_t1_w += puissance_ajoutee_w
+        elif label == "T2":
+            puissance_t2_w += puissance_ajoutee_w
+        elif label == "T3":
+            puissance_t3_w += puissance_ajoutee_w
+
+    # 40% of the panel power is usable in the first daytime tranche.
+    panneau_t1_pratique_w = puissance_max_w * 0.4
+
+    # The late-afternoon tranche keeps only 50% of the already usable power.
+    panneau_t2_pratique_w = panneau_t1_pratique_w * 0.5
+
+    # The night tranche is battery-driven, so the solar panel contributes 0W.
+    panneau_t3_pratique_w = 0.0
+
+    puissance_restante_t1_w = panneau_t1_pratique_w - puissance_t1_w
+    puissance_restante_t2_w = panneau_t2_pratique_w - puissance_t2_w
+    puissance_restante_t3_w = panneau_t3_pratique_w - puissance_t3_w
+
+    if puissance_restante_t1_w < 0:
+        puissance_restante_t1_w = 0.0
+    if puissance_restante_t2_w < 0:
+        puissance_restante_t2_w = 0.0
+    if puissance_restante_t3_w < 0:
+        puissance_restante_t3_w = 0.0
+
+    puissance_restante_totale_w = (
+        puissance_restante_t1_w + puissance_restante_t2_w + puissance_restante_t3_w
+    )
+
+    return {
+        "puissance_max_w": puissance_max_w,
+        "puissance_t1_w": puissance_t1_w,
+        "puissance_t2_w": puissance_t2_w,
+        "puissance_t3_w": puissance_t3_w,
+        "panneau_t1_pratique_w": panneau_t1_pratique_w,
+        "panneau_t2_pratique_w": panneau_t2_pratique_w,
+        "panneau_t3_pratique_w": panneau_t3_pratique_w,
+        "puissance_restante_t1_w": puissance_restante_t1_w,
+        "puissance_restante_t2_w": puissance_restante_t2_w,
+        "puissance_restante_t3_w": puissance_restante_t3_w,
+        "puissance_restante_totale_w": puissance_restante_totale_w,
+    }

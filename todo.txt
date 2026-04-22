@@ -206,3 +206,47 @@ Ajoute le workflow de l'affichage dans todo.txt et met plein de commentaire sur 
       - Textes courts et lisibles
       - Une seule couleur d'accent
       - Une interface propre, simple et moderne
+
+- Retour sur le calcul de la puissance restante , fait une autre fonction en tenant compte , 
+du 40% de la puissance utilisé et du 50% de la puissance utilisé par tranche d'heure  
+
+     WORKFLOW DU CALCUL PRATIQUE DE PUISSANCE RESTANTE:
+     ================================================
+     1. calculer_puissance_restante_pratique(puissance_max_w)
+         - lance le nouveau calcul pratique
+         - prend la puissance maximale du panneau en entree
+
+     2. Lecture des usages dans la base
+         - la fonction recupere toutes les utilisations avec list_utilisations()
+         - chaque ligne donne le nom, la puissance, la tranche et la duree
+
+     3. Regroupement par tranche
+         - T1: on additionne les puissances des appareils du matin
+         - T2: on additionne les puissances des appareils de fin d'apres-midi
+         - T3: on additionne les puissances des appareils de nuit
+
+     4. Application des regles pratiques
+         - T1: seule 40% de la puissance du panneau est vraiment disponible
+         - T2: seule 50% de cette puissance pratique reste disponible
+         - T3: la nuit est consideree comme batterie, donc le solaire est a 0W
+
+     5. Calcul du reste par tranche
+         - reste T1 = puissance pratique T1 - consommation T1
+         - reste T2 = puissance pratique T2 - consommation T2
+         - reste T3 = 0 - consommation T3
+         - si le resultat est negatif, on met 0 pour eviter un reste faux
+
+     6. Calcul du total pratique
+         - on additionne les restes de toutes les tranches
+         - la fonction retourne aussi les puissances consommees par tranche
+
+     7. Utilisation attendue
+         - cette fonction sert a dire combien il reste reellement selon les regles du projet
+         - elle donne une vision plus proche de la pratique que le calcul simple
+
+     RESULTAT ATTENDU:
+     ===============
+     - puissance_t1_w / puissance_t2_w / puissance_t3_w
+     - panneau_t1_pratique_w / panneau_t2_pratique_w / panneau_t3_pratique_w
+     - puissance_restante_t1_w / puissance_restante_t2_w / puissance_restante_t3_w
+     - puissance_restante_totale_w

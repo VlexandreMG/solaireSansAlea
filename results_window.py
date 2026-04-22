@@ -179,6 +179,12 @@ class ResultsWindow(tk.Toplevel):
                 TEXT_COLOR,
                 [
                     (
+                        "Pic de consommation",
+                        puissance_restante["pic_w"],
+                        "W",
+                        "kW",
+                    ),
+                    (
                         "Reste T1",
                         puissance_restante["puissance_restante_t1_w"],
                         "W",

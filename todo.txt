@@ -429,6 +429,31 @@ et les commentaires dans la fonction et l'affichage
      - prix_journalier / prix_weekend
      - cout_journalier / cout_weekend
 
+     WORKFLOW D'INTEGRATION DE calculer_puissance_restante_pratique() DANS result_window:
+     ====================================================================================
+     1. AppareilApp.calculer() appelle la fonction
+         - calcule theorique + pratique
+         - appelle calculer_puissance_restante_pratique(resultat["panneau_achat_w"])
+         - injecte le resultat dans resultat["puissance_restante_pratique"]
+         - ouvre ResultsWindow avec toutes les donnees
+
+     2. ResultsWindow affiche la section "Puissance restante pratique"
+         - recupere les donnees avec self._resultats.get("puissance_restante_pratique")
+         - affiche une nouvelle carte avec les valeurs suivantes:
+           * Pic de consommation (pic_w) en W et kW
+           * Reste T1 (puissance_restante_t1_w) en W et kW
+           * Reste T2 (puissance_restante_t2_w) en W et kW
+           * Reste T3 (puissance_restante_t3_w) en W et kW
+           * Reste total (puissance_restante_totale_w) en W et kW
+
+     3. Logique de calcul utilisee
+         - chaque heure (0-23) accumule la puissance des appareils qui fonctionnent
+         - on trouve le pic (valeur max de consommation)
+         - pour T1 (6-17h): on somme (pic - consommation_heure) si > 0
+         - pour T2 (17-19h): on somme (pic/2 - consommation_heure) si > 0
+         - pour T3 (19-6h): reste = 0 (batterie seule)
+         - reste total = reste_T1 + reste_T2
+
 - Au moins tout marche , mais il y a un problème dans le calcul du reste de la puissance ,
 on cherche le pic , 
 puis la consommation en puissance pour tous les heures , 
@@ -450,3 +475,14 @@ pour avoir le reste de la puissance finale
 on néglige T3 car on n'utilise pas de panneau à ce stade de la journée 
 supprime la fonction calculer_puissance_restante_pratique(puissance_max_w):
 et n'oublie pas le workflow dans la todo et les commentaires sur la fonction 
+
+- Maintenant appelle cette fonction dans result_window
+
+     IMPLEMENTATION COMPLETE: calculer_puissance_restante_pratique() intégrée dans result_window
+     =======================================================================================
+     ✓ Fonction créée avec analyse horaire (pic de consommation)
+     ✓ Fonction appelée dans AppareilApp.calculer() 
+     ✓ Résultat injecté dans resultat["puissance_restante_pratique"]
+     ✓ Affichage intégré dans ResultsWindow avec la nouvelle carte "Puissance restante pratique"
+     ✓ Affichage du pic de consommation ajouté en premier dans la carte
+     ✓ Tous les commentaires et workflows documentés 

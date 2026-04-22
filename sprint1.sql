@@ -56,5 +56,6 @@ CREATE TABLE tarif (
     id INT NOT NULL PRIMARY KEY,
     id_type_journee INT NOT NULL,
     prix FLOAT NOT NULL, 
-    nb INT NOT NULL
+    nb INT NOT NULL,
+    percenta INT NOT NULL
 ); 

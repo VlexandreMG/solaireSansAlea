@@ -213,39 +213,59 @@ class ResultsWindow(tk.Toplevel):
             )
 
         # Display the tariff outputs for journalier and weekend.
-        # Supports pack pricing baseline (nb): e.g., 2Wh for 1000Ar.
-        prix_tarifaire = self._resultats.get("prix_tarifaire_wh")
+        # Supports pack pricing baseline (nb) and peak-hour surcharge display.
+        prix_tarifaire = self._resultats.get("prix_tarifaire_wh - ETU4339")
         if prix_tarifaire:
-            self._build_section(
-                container,
-                "Prix selon le tarif",
-                SOFT_ACCENT,
-                TEXT_COLOR,
+            est_pointe = prix_tarifaire.get("est_heures_pointe", False)
+            pointe_label = " (HEURES DE POINTE)" if est_pointe else " (BASE)"
+
+            rows = [
+                (
+                    "Tarif journalier (pack)",
+                    prix_tarifaire["prix_journalier_pack"],
+                    "Ar",
+                    "Ar",
+                ),
+                (
+                    "Base journalier",
+                    prix_tarifaire["nb_journalier_wh"],
+                    "Wh",
+                    "Wh",
+                ),
+                (
+                    "Tarif journalier unitaire (base)",
+                    prix_tarifaire["prix_journalier_base"],
+                    "Ar/Wh",
+                    "Ar/Wh",
+                ),
+                (
+                    "Coût journalier (base)",
+                    prix_tarifaire["cout_journalier_base"],
+                    "Ar",
+                    "Ar",
+                ),
+            ]
+
+            if est_pointe:
+                rows.extend(
+                    [
+                        (
+                            f"Tarif journalier avec pointe (+{prix_tarifaire['surcharge_journalier_pct']:.0f}%)",
+                            prix_tarifaire["prix_journalier_pointe"],
+                            "Ar/Wh",
+                            "Ar/Wh",
+                        ),
+                        (
+                            "Coût journalier (heures de pointe)",
+                            prix_tarifaire["cout_journalier_pointe"],
+                            "Ar",
+                            "Ar",
+                        ),
+                    ]
+                )
+
+            rows.extend(
                 [
-                    (
-                        "Tarif journalier (pack)",
-                        prix_tarifaire["prix_journalier_pack"],
-                        "Ar",
-                        "Ar",
-                    ),
-                    (
-                        "Base journalier",
-                        prix_tarifaire["nb_journalier_wh"],
-                        "Wh",
-                        "Wh",
-                    ),
-                    (
-                        "Tarif journalier unitaire",
-                        prix_tarifaire["prix_journalier"],
-                        "Ar/Wh",
-                        "Ar/Wh",
-                    ),
-                    (
-                        "Coût journalier",
-                        prix_tarifaire["cout_journalier"],
-                        "Ar",
-                        "Ar",
-                    ),
                     (
                         "Tarif weekend (pack)",
                         prix_tarifaire["prix_weekend_pack"],
@@ -259,18 +279,44 @@ class ResultsWindow(tk.Toplevel):
                         "Wh",
                     ),
                     (
-                        "Tarif weekend unitaire",
-                        prix_tarifaire["prix_weekend"],
+                        "Tarif weekend unitaire (base)",
+                        prix_tarifaire["prix_weekend_base"],
                         "Ar/Wh",
                         "Ar/Wh",
                     ),
                     (
-                        "Coût weekend",
-                        prix_tarifaire["cout_weekend"],
+                        "Coût weekend (base)",
+                        prix_tarifaire["cout_weekend_base"],
                         "Ar",
                         "Ar",
                     ),
-                ],
+                ]
+            )
+
+            if est_pointe:
+                rows.extend(
+                    [
+                        (
+                            f"Tarif weekend avec pointe (+{prix_tarifaire['surcharge_weekend_pct']:.0f}%)",
+                            prix_tarifaire["prix_weekend_pointe"],
+                            "Ar/Wh",
+                            "Ar/Wh",
+                        ),
+                        (
+                            "Coût weekend (heures de pointe)",
+                            prix_tarifaire["cout_weekend_pointe"],
+                            "Ar",
+                            "Ar",
+                        ),
+                    ]
+                )
+
+            self._build_section(
+                container,
+                f"Prix selon le tarif{pointe_label}",
+                SOFT_ACCENT,
+                TEXT_COLOR,
+                rows,
                 highlight=True,
             )
 

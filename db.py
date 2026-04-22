@@ -159,7 +159,8 @@ def list_tarifs():
                 t.id_type_journee,
                 j.nom,
                 t.prix,
-                ISNULL(t.nb, 1) AS nb
+                ISNULL(t.nb, 1) AS nb,
+                ISNULL(t.percenta, 0) AS percenta
             FROM tarif t
             LEFT JOIN type_journee j ON j.id = t.id_type_journee
             ORDER BY t.id

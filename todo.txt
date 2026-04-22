@@ -567,3 +567,55 @@ n'oublie pas le workflow dans la todo et les commentaires dans la fonction
 
 - Majorée ny heure de pointe de 12 à 14h et 17 à 19 . 
 à cette heure , mitombo ny vidin'courant , (exemple) jour ouvrable miakatra 50% , jour weekend miakatra 30%  
+
+- Maintenant , il existe des heures de pointes de 12h à 14 h et de 17h à 19h , 
+quand un appareil est utilisé dans ses horaires là , 
+le prix du tarif journalier augmente de x% (x configrable , même chose pour le tarif weekend) 
+et augmente de y% .  
+J'ai rajouté dans la table tarif , la colonne percenta , 
+et dans la fonction calculer_prix_tarifaire_wh(conversion_puissance_reduite_wh) , 
+j'aimerais avoir une fonction qui détecte si un appareil était détecté dans ces heures de pointes ,
+la fonction retournerai en plus le tarif journalier et weekend avec heures de pointes . 
+N'oublie pas le workflow todo et les commentaires  
+
+     WORKFLOW DETECTION HEURES DE POINTE AVEC SURCHARGE:
+     ===================================================
+     1. Definition des heures de pointe
+         - plage 1: 12h -> 14h
+         - plage 2: 17h -> 19h
+
+     2. Detection de chevauchement avec les utilisations
+         - lire les utilisations avec heure_debut et heure_fin
+         - pour chaque usage, verifier le chevauchement avec chaque plage de pointe
+         - regle de chevauchement: [debut, fin) recoupe [pointe_debut, pointe_fin)
+           si debut < pointe_fin et fin > pointe_debut
+         - si au moins un chevauchement existe: est_heures_pointe = True
+
+     3. Chargement des tarifs avec majoration
+         - list_tarifs() retourne: id, id_type_journee, nom, prix, nb, percenta
+         - nb est la base de quantite du pack (Wh)
+         - percenta est le pourcentage de majoration en heure de pointe
+
+     4. Calcul des tarifs unitaires
+         - tarif_unitaire_base = prix_pack / nb
+         - si est_heures_pointe:
+             tarif_unitaire_pointe = tarif_unitaire_base * (1 + percenta/100)
+           sinon:
+             tarif_unitaire_pointe = tarif_unitaire_base
+
+     5. Calcul des couts
+         - cout_base = quantite_reduite * tarif_unitaire_base
+         - cout_pointe = quantite_reduite * tarif_unitaire_pointe
+         - faire ce calcul pour journalier et weekend
+
+     6. Donnees retournees par le calcul
+         - est_heures_pointe
+         - prix/couts de base: journalier + weekend
+         - prix/couts de pointe: journalier + weekend
+         - pourcentages appliques: surcharge_journalier_pct, surcharge_weekend_pct
+         - infos pack: prix_pack et nb pour journalier/weekend
+
+     7. Affichage dans la fenetre de resultats
+         - afficher le bloc tarif avec mention BASE ou HEURES DE POINTE
+         - afficher systematiquement les valeurs de base
+         - si pointe detectee, afficher en plus les valeurs majorees

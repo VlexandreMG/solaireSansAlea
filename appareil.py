@@ -1,7 +1,11 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from calculations import calculer_pratique, calculer_theorique
+from calculations import (
+    calculer_pratique,
+    calculer_puissance_restante_pratique,
+    calculer_theorique,
+)
 import db
 from results_window import ResultsWindow
 
@@ -409,6 +413,15 @@ class AppareilApp:
         try:
             theorique = calculer_theorique()
             resultat = calculer_pratique(theorique)
+
+            # Compute the practical remaining power by tranche from the
+            # recommended panel size so the results window can display it.
+            resultat["puissance_restante_pratique"] = (
+                calculer_puissance_restante_pratique(
+                    resultat["panneau_achat_w"]
+                )
+            )
+
             # Persist the current calculation for later reference.
             db.save_resultat(
                 resultat["panneau_theorique_w"],

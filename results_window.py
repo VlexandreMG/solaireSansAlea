@@ -49,6 +49,12 @@ class ResultsWindow(tk.Toplevel):
         style.configure("Result.TButton", padding=(14, 8), font=("Segoe UI", 10, "bold"))
 
     def _build_ui(self):
+        # Workflow summary for this method:
+        # 1) Build the main container and header.
+        # 2) Display theoretical and practical purchase sections.
+        # 3) Display the practical remaining power section by tranche.
+        # 4) Show summary text and action button.
+
         # Main container with airy margins.
         container = tk.Frame(self, bg=BG_COLOR, padx=20, pady=20)
         container.pack(fill="both", expand=True)
@@ -116,6 +122,45 @@ class ResultsWindow(tk.Toplevel):
             ],
             highlight=True,
         )
+
+        # Show remaining practical power per tranche when available.
+        # This data is produced by calculer_puissance_restante_pratique(...)
+        # and injected in AppareilApp.calculer before opening this window.
+        puissance_restante = self._resultats.get("puissance_restante_pratique")
+        if puissance_restante:
+            self._build_section(
+                container,
+                "Puissance restante pratique",
+                SOFT_ACCENT,
+                TEXT_COLOR,
+                [
+                    (
+                        "Reste T1",
+                        puissance_restante["puissance_restante_t1_w"],
+                        "W",
+                        "kW",
+                    ),
+                    (
+                        "Reste T2",
+                        puissance_restante["puissance_restante_t2_w"],
+                        "W",
+                        "kW",
+                    ),
+                    (
+                        "Reste T3",
+                        puissance_restante["puissance_restante_t3_w"],
+                        "W",
+                        "kW",
+                    ),
+                    (
+                        "Reste total",
+                        puissance_restante["puissance_restante_totale_w"],
+                        "W",
+                        "kW",
+                    ),
+                ],
+                highlight=True,
+            )
 
         # One short sentence summarizes the final answer.
         resume = (

@@ -250,3 +250,35 @@ du 40% de la puissance utilisé et du 50% de la puissance utilisé par tranche d
      - panneau_t1_pratique_w / panneau_t2_pratique_w / panneau_t3_pratique_w
      - puissance_restante_t1_w / puissance_restante_t2_w / puissance_restante_t3_w
      - puissance_restante_totale_w
+
+- Dans result_window.py , je veux que tu me montre le resultat du calcul de la puissance restante , 
+n'oublie le workflow dans ce fichier et les commentaires dans la fonction
+
+     WORKFLOW D'AFFICHAGE DANS result_window.py:
+     ===========================================
+     1. AppareilApp.calculer()
+         - calcule theorique + pratique
+         - appelle calculer_puissance_restante_pratique(...)
+         - injecte le resultat dans resultat["puissance_restante_pratique"]
+         - ouvre ResultsWindow avec toutes les donnees
+
+     2. ResultsWindow.__init__()
+         - recupere self._resultats
+         - appelle _build_ui() pour construire tout l'affichage
+
+     3. ResultsWindow._build_ui()
+         - affiche la carte theorique
+         - affiche la carte achat conseille
+         - lit puissance_restante = self._resultats.get("puissance_restante_pratique")
+         - si present, affiche une nouvelle carte "Puissance restante pratique"
+
+     4. Carte "Puissance restante pratique"
+         - affiche Reste T1
+         - affiche Reste T2
+         - affiche Reste T3
+         - affiche Reste total
+         - toutes les valeurs sont en W et en kW
+
+     5. Commentaires dans la fonction
+         - la fonction _build_ui() contient des commentaires de workflow
+         - les blocs importants sont commentes pour expliquer l'ordre d'affichage

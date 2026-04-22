@@ -210,46 +210,79 @@ Ajoute le workflow de l'affichage dans todo.txt et met plein de commentaire sur 
 - Retour sur le calcul de la puissance restante , fait une autre fonction en tenant compte , 
 du 40% de la puissance utilisé et du 50% de la puissance utilisé par tranche d'heure  
 
-     WORKFLOW DU CALCUL PRATIQUE DE PUISSANCE RESTANTE:
-     ================================================
+     WORKFLOW DU CALCUL PRATIQUE DE PUISSANCE RESTANTE (ANALYSE HORAIRE):
+     ===================================================================
      1. calculer_puissance_restante_pratique(puissance_max_w)
-         - lance le nouveau calcul pratique
+         - lance le nouveau calcul basé sur l'analyse horaire
          - prend la puissance maximale du panneau en entree
 
-     2. Lecture des usages dans la base
+     2. Construction de la consommation par heure
          - la fonction recupere toutes les utilisations avec list_utilisations()
-         - chaque ligne donne le nom, la puissance, la tranche et la duree
+         - pour chaque appareil, on note sa puissance et ses heures d'operation
+         - exemple: TV 200W de 6h à 8h → on ajoute 200W aux heures 6 et 7
 
-     3. Regroupement par tranche
-         - T1: on additionne les puissances des appareils du matin
-         - T2: on additionne les puissances des appareils de fin d'apres-midi
-         - T3: on additionne les puissances des appareils de nuit
+     3. Mappage hourly 0-23
+         - on construit un dictionnaire avec 24 entrees (une pour chaque heure)
+         - chaque heure accumule la puissance de tous les appareils actifs a cette heure
+         - si plusieurs appareils fonctionnent à la même heure, on les additionne
 
-     4. Application des regles pratiques
-         - T1: seule 40% de la puissance du panneau est vraiment disponible
-         - T2: seule 50% de cette puissance pratique reste disponible
-         - T3: la nuit est consideree comme batterie, donc le solaire est a 0W
+     4. Recherche du pic de consommation
+         - on parcourt toutes les 24 heures
+         - le pic est la valeur maximale de consommation trouvee
+         - exemple: pic = 500W (c'est l'heure la plus consommatrice)
 
-     5. Calcul du reste par tranche
-         - reste T1 = puissance pratique T1 - consommation T1
-         - reste T2 = puissance pratique T2 - consommation T2
-         - reste T3 = 0 - consommation T3
-         - si le resultat est negatif, on met 0 pour eviter un reste faux
+     5. Calcul du reste pour T1 (6-17h avec pic complet)
+         - pour chaque heure de 6 à 17:
+           - calculer: reste_heure = pic - consommation_a_cette_heure
+           - ne garder que les valeurs positives
+           - additionner tous les restes des heures T1
+         - exemple: si consommation 6-7h=200W, reste=500-200=300W
 
-     6. Calcul du total pratique
-         - on additionne les restes de toutes les tranches
-         - la fonction retourne aussi les puissances consommees par tranche
+     6. Calcul du reste pour T2 (17-19h avec pic/2)
+         - intensité solaire reduite en fin d'après-midi
+         - on utilise pic/2 au lieu du pic complet
+         - pour chaque heure de 17 à 19:
+           - calculer: reste_heure = (pic/2) - consommation_a_cette_heure
+           - ne garder que les valeurs positives
+           - additionner tous les restes des heures T2
 
-     7. Utilisation attendue
-         - cette fonction sert a dire combien il reste reellement selon les regles du projet
-         - elle donne une vision plus proche de la pratique que le calcul simple
+     7. T3 (19-6h) est ignore completement
+         - pas de production solaire la nuit
+         - les batteries gerent toute la consommation
+         - reste_t3 = 0
 
-     RESULTAT ATTENDU:
-     ===============
-     - puissance_t1_w / puissance_t2_w / puissance_t3_w
-     - panneau_t1_pratique_w / panneau_t2_pratique_w / panneau_t3_pratique_w
-     - puissance_restante_t1_w / puissance_restante_t2_w / puissance_restante_t3_w
-     - puissance_restante_totale_w
+     8. Calcul du total
+         - puissance_restante_totale = reste_t1 + reste_t2
+
+     9. Retour de la fonction
+         - pic_w: le pic de consommation trouve
+         - reste_t1_w: puissance disponible en T1
+         - reste_t2_w: puissance disponible en T2
+         - reste_t3_w: 0 (nuit)
+         - puissance_restante_totale_w: reste_T1 + reste_T2
+
+     EXEMPLE CONCRET:
+     ================
+     Appareils:
+       - TV 200W de 6h à 8h (T1)
+       - Ordi 150W de 7h à 18h (T1+T2)
+       - Frigo 100W de 0h à 24h (toutes tranches)
+     
+     Consommation par heure:
+       - 6h: 200+100 = 300W
+       - 7h: 200+150+100 = 450W (pic!)
+       - 8h: 150+100 = 250W
+       - ...
+       - 17h: 150+100 = 250W
+       - 18h: 150+100 = 250W (pic_t2 = 225W car pic/2)
+       - 19h et plus: batterie
+
+     Calcul:
+       - pic = 450W
+       - T1 (6-17h): (450-300) + (450-450) + (450-250) + ... = somme des restes
+       - pic_t2 = 225W
+       - T2 (17-19h): (225-250) + (225-250) = 0 (consommation > pic_t2)
+
 
 - Dans result_window.py , je veux que tu me montre le resultat du calcul de la puissance restante , 
 n'oublie le workflow dans ce fichier et les commentaires dans la fonction
@@ -395,3 +428,25 @@ et les commentaires dans la fonction et l'affichage
      ===============
      - prix_journalier / prix_weekend
      - cout_journalier / cout_weekend
+
+- Au moins tout marche , mais il y a un problème dans le calcul du reste de la puissance ,
+on cherche le pic , 
+puis la consommation en puissance pour tous les heures , 
+exemple : 
+    - de 6 à 7h , la consommation est de 200W 
+    - le pic est de 500W 
+    - donc de 6 à 7h on a 300W 
+    - on fait ce calcul pour chaque heure jusqu'à la premiere tranche T1 
+    - on somme les puissances pour chaque heure 
+    - Puis on multiplie cette somme avec le pic 
+    - on obtient le reste de la puissance pour T1
+    
+    - Pour la tranche 2 
+    - on prend la moitié du pic (pic/2)
+    - on recommence le même process qu'en haut 
+    - on obtient le reste de la puissance pour T2 
+à la fin , on additionne le reste de la puissance T1 avec le reste de la puissance T2 
+pour avoir le reste de la puissance finale 
+on néglige T3 car on n'utilise pas de panneau à ce stade de la journée 
+supprime la fonction calculer_puissance_restante_pratique(puissance_max_w):
+et n'oublie pas le workflow dans la todo et les commentaires sur la fonction 

@@ -136,89 +136,110 @@ def calculer_puissance_restante(puissance_max_w):
 
 def calculer_puissance_restante_pratique(puissance_max_w):
     """
-    Calculate the practical remaining power by tranche.
+    Calculate practical remaining power using hourly peak analysis.
 
-    This version applies the practical sizing rules from the notes:
-    - 40% of the panel power is really usable in normal daytime operation
-    - the late-afternoon tranche keeps only 50% of that usable power
-    - the night tranche is considered battery-driven, so it is tracked separately
+    This function finds the peak power consumption across all operating hours,
+    then calculates how much power remains available for each time period by
+    subtracting the actual hourly consumption from the available peak power.
 
     Workflow:
-    1. Convert the maximum power to float
-    2. Load all device usages from the database
-    3. Group the total consumed power by tranche
-    4. Compute the practical available power for each tranche
-    5. Subtract the devices consumed in that tranche
-    6. Clamp negative values to zero
-    7. Return a detailed dictionary with tranche totals and remaining values
+    1. Build a power consumption map by analyzing each hour (0-23)
+    2. For each device usage, add its power to each hour it operates
+    3. Find the peak (maximum) power consumption across all hours
+    4. For T1 (6-17h daytime): sum up (peak - hourly_consumption) for each hour
+    5. For T2 (17-19h late afternoon): sum up (peak/2 - hourly_consumption) for each hour
+       - Note: peak is halved because of reduced solar intensity at this time
+    6. T3 (19-6h night) is ignored because solar panels don't produce at night
+    7. Return total remaining power = reste_T1 + reste_T2
+
+    Example calculation:
+    - If peak power consumption = 500W
+    - At 6-7h: consumption = 200W, remaining = 500 - 200 = 300W
+    - At 7-8h: consumption = 150W, remaining = 500 - 150 = 350W
+    - T1 remainder = 300 + 350 + ... = total for all T1 hours
+    - For T2 at 17-18h: consumption = 100W, peak_t2 = 250W (half peak), remaining = 250 - 100 = 150W
 
     Args:
         puissance_max_w (float): Maximum panel power in Watts
 
     Returns:
-        dict: Practical sizing details by tranche and in total
+        dict: Remaining power breakdown:
+            - 'puissance_max_w': Input maximum power
+            - 'pic_w': Peak consumption found across all hours
+            - 'puissance_restante_t1_w': Remaining power for T1 (6-17h)
+            - 'puissance_restante_t2_w': Remaining power for T2 (17-19h)
+            - 'puissance_restante_t3_w': Always 0 (T3 is battery-driven)
+            - 'puissance_restante_totale_w': Total remaining = T1 + T2
     """
-
+    
+    # Step 1: Convert input to float for calculation safety
     puissance_max_w = float(puissance_max_w)
-
-    puissance_t1_w = 0.0
-    puissance_t2_w = 0.0
-    puissance_t3_w = 0.0
-
+    
+    # Step 2: Initialize hourly consumption map (0-23 hours)
+    # Each hour slot will accumulate power from all devices operating at that time
+    consommation_par_heure = {h: 0.0 for h in range(24)}
+    
+    # Step 3: Retrieve all device usages from the database
     utilisations = list_utilisations()
-
+    
+    # Step 4: Build consumption profile by hour
+    # For each device, add its power to every hour it operates
     for (
         _util_id,
         _appareil_id,
         _nom,
         puissance_w,
         _tranche_id,
-        label,
-        _heure_debut,
-        _heure_fin,
+        _label,
+        heure_debut,
+        heure_fin,
         _duree_h,
     ) in utilisations:
-        puissance_ajoutee_w = float(puissance_w)
-
-        if label == "T1":
-            puissance_t1_w += puissance_ajoutee_w
-        elif label == "T2":
-            puissance_t2_w += puissance_ajoutee_w
-        elif label == "T3":
-            puissance_t3_w += puissance_ajoutee_w
-
-    # 40% of the panel power is usable in the first daytime tranche.
-    panneau_t1_pratique_w = puissance_max_w * 0.4
-
-    # The late-afternoon tranche keeps only 50% of the already usable power.
-    panneau_t2_pratique_w = panneau_t1_pratique_w * 0.5
-
-    # The night tranche is battery-driven, so the solar panel contributes 0W.
-    panneau_t3_pratique_w = 0.0
-
-    puissance_restante_t1_w = panneau_t1_pratique_w - puissance_t1_w
-    puissance_restante_t2_w = panneau_t2_pratique_w - puissance_t2_w
-    puissance_restante_t3_w = panneau_t3_pratique_w - puissance_t3_w
-
-    if puissance_restante_t1_w < 0:
-        puissance_restante_t1_w = 0.0
-    if puissance_restante_t2_w < 0:
-        puissance_restante_t2_w = 0.0
-    if puissance_restante_t3_w < 0:
-        puissance_restante_t3_w = 0.0
-
-    puissance_restante_totale_w = (
-        puissance_restante_t1_w + puissance_restante_t2_w + puissance_restante_t3_w
-    )
-
+        puissance_w = float(puissance_w)
+        heure_debut = int(heure_debut)
+        heure_fin = int(heure_fin)
+        
+        # Add this device's power for each hour between debut and fin (inclusive start, exclusive end)
+        for h in range(heure_debut, heure_fin):
+            if 0 <= h < 24:
+                consommation_par_heure[h] += puissance_w
+    
+    # Step 5: Find the peak power consumption across all hours
+    # This represents the maximum power demand at any point during the day
+    pic = max(consommation_par_heure.values()) if consommation_par_heure.values() else 0.0
+    
+    # Step 6: Calculate remaining power for T1 (6-17h with full peak)
+    # For each hour in T1 daytime, calculate how much power is available
+    puissance_restante_t1_w = 0.0
+    for h in range(6, 17):  # Hours 6 through 16 (6am to 5pm)
+        # Remaining power at this hour = peak available - actual consumption
+        reste_heure = pic - consommation_par_heure[h]
+        # Only count positive remainders (can't have negative available power)
+        if reste_heure > 0:
+            puissance_restante_t1_w += reste_heure
+    
+    # Step 7: Calculate remaining power for T2 (17-19h with half peak)
+    # Solar intensity drops in late afternoon, so only half the peak is available
+    puissance_restante_t2_w = 0.0
+    pic_t2 = pic / 2.0  # Half the peak for late afternoon hours
+    for h in range(17, 19):  # Hours 17 through 18 (5pm to 7pm)
+        # Remaining power at this hour = (peak/2) available - actual consumption
+        reste_heure = pic_t2 - consommation_par_heure[h]
+        # Only count positive remainders
+        if reste_heure > 0:
+            puissance_restante_t2_w += reste_heure
+    
+    # Step 8: T3 (19-6h) is ignored because there is no solar production at night
+    # Battery handles all power needs during these hours
+    puissance_restante_t3_w = 0.0
+    
+    # Step 9: Calculate total remaining power
+    puissance_restante_totale_w = puissance_restante_t1_w + puissance_restante_t2_w
+    
+    # Step 10: Return comprehensive breakdown for display and further calculations
     return {
         "puissance_max_w": puissance_max_w,
-        "puissance_t1_w": puissance_t1_w,
-        "puissance_t2_w": puissance_t2_w,
-        "puissance_t3_w": puissance_t3_w,
-        "panneau_t1_pratique_w": panneau_t1_pratique_w,
-        "panneau_t2_pratique_w": panneau_t2_pratique_w,
-        "panneau_t3_pratique_w": panneau_t3_pratique_w,
+        "pic_w": pic,
         "puissance_restante_t1_w": puissance_restante_t1_w,
         "puissance_restante_t2_w": puissance_restante_t2_w,
         "puissance_restante_t3_w": puissance_restante_t3_w,

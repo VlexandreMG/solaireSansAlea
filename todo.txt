@@ -118,3 +118,32 @@ Et montre moi le workflow de la fonction dans todo.txt et rempli la fonction de 
     - Paramètres et retours documentés
     - Exemples d'usage 
 
+- Je veux que tu change le design de l'interface maintenant . Change le en minimaliste mais bien . 
+Ajoute le workflow de l'affichage dans todo.txt et met plein de commentaire sur tous le code de l'interface 
+
+     WORKFLOW DE L'AFFICHAGE MINIMALISTE:
+     ===================================
+     1. Ouvrir la fenetre principale avec un fond clair et une taille confortable
+     2. Appliquer un theme simple et uniforme aux boutons, tableaux et cadres
+     3. Afficher un titre principal et un sous-titre court pour guider l'utilisateur
+     4. Regrouper la saisie dans une carte propre avec les champs alignes horizontalement
+     5. Afficher la liste des appareils dans un tableau lisible avec une scrollbar
+     6. Mettre les actions importantes en bas de la fenetre:
+         - supprimer en style discret
+         - calculer en style accentue
+     7. Ouvrir la fenetre de resultats avec le meme style minimaliste
+     8. Montrer les resultats sous forme de cartes simples:
+         - calcul theorique
+         - achat conseille
+     9. Ajouter un resume clair pour que l'utilisateur comprenne vite le resultat
+     10. Proposer un bouton "Nouveau calcul" pour revenir a la saisie
+
+     OBJECTIF VISUEL:
+     ===============
+     - Peu de couleurs
+     - Beaucoup d'espace blanc
+     - Textes courts et lisibles
+     - Une seule couleur d'accent
+     - Une interface propre, simple et moderne
+
+Refait le workflow du dessus en rajoutant cette fonction fait ceci , celle_là fait cela etc 

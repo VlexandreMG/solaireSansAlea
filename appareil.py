@@ -6,16 +6,34 @@ import db
 from results_window import ResultsWindow
 
 
+# Shared colors for a soft, minimal visual style.
+BG_COLOR = "#f5f7fb"
+CARD_COLOR = "#ffffff"
+BORDER_COLOR = "#d9e2ec"
+TEXT_COLOR = "#1f2933"
+MUTED_COLOR = "#52606d"
+ACCENT_COLOR = "#2f6f9f"
+ACCENT_DARK = "#24577d"
+
+
 class AppareilApp:
     def __init__(self, root):
+        # Keep a direct reference to the main window.
         self.root = root
         self.root.title("Solaire - Saisie des appareils")
-        self.root.geometry("900x520")
+        self.root.geometry("980x600")
+        self.root.minsize(900, 560)
+        self.root.configure(background=BG_COLOR)
 
+        # Map tranche labels to their database identifiers.
         self.tranches_by_label = {}
+
+        # Prepare the visual style before drawing widgets.
+        self._setup_styles()
         self._build_ui()
 
         try:
+            # Load fixed tranches once at startup.
             db.ensure_tranches()
             self._load_tranches()
             self._refresh_tree()
@@ -25,10 +43,108 @@ class AppareilApp:
                 f"Connexion SQL Server impossible:\n{exc}",
             )
 
-    def _build_ui(self):
-        form = ttk.LabelFrame(self.root, text="Ajouter un appareil")
-        form.pack(fill="x", padx=12, pady=12)
+    def _setup_styles(self):
+        # Keep the interface calm and consistent.
+        style = ttk.Style(self.root)
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
 
+        style.configure("App.TFrame", background=BG_COLOR)
+        style.configure(
+            "Card.TLabelframe",
+            background=CARD_COLOR,
+            foreground=TEXT_COLOR,
+            bordercolor=BORDER_COLOR,
+            padding=14,
+        )
+        style.configure(
+            "Card.TLabelframe.Label",
+            background=BG_COLOR,
+            foreground=TEXT_COLOR,
+            font=("Segoe UI", 11, "bold"),
+        )
+        style.configure(
+            "Minimal.TButton",
+            background=ACCENT_COLOR,
+            foreground="#ffffff",
+            padding=(14, 8),
+            borderwidth=0,
+            focusthickness=0,
+            font=("Segoe UI", 10, "bold"),
+        )
+        style.map(
+            "Minimal.TButton",
+            background=[("active", ACCENT_DARK), ("pressed", ACCENT_DARK)],
+        )
+        style.configure(
+            "Ghost.TButton",
+            background="#edf2f7",
+            foreground=TEXT_COLOR,
+            padding=(14, 8),
+            borderwidth=0,
+            focusthickness=0,
+            font=("Segoe UI", 10, "bold"),
+        )
+        style.map(
+            "Ghost.TButton",
+            background=[("active", "#d9e2ec"), ("pressed", "#cbd2d9")],
+        )
+        style.configure(
+            "Minimal.Treeview",
+            background=CARD_COLOR,
+            fieldbackground=CARD_COLOR,
+            foreground=TEXT_COLOR,
+            bordercolor=BORDER_COLOR,
+            rowheight=30,
+            font=("Segoe UI", 10),
+        )
+        style.configure(
+            "Minimal.Treeview.Heading",
+            background="#edf2f7",
+            foreground=TEXT_COLOR,
+            relief="flat",
+            font=("Segoe UI", 10, "bold"),
+        )
+        style.map("Minimal.Treeview", background=[("selected", "#dbeafe")])
+
+    def _build_ui(self):
+        # Main page container with consistent spacing.
+        container = ttk.Frame(self.root, style="App.TFrame", padding=18)
+        container.pack(fill="both", expand=True)
+
+        # Header with a title and a short explanation.
+        header = tk.Frame(container, bg=BG_COLOR)
+        header.pack(fill="x", pady=(0, 14))
+
+        title = tk.Label(
+            header,
+            text="Gestion des appareils",
+            font=("Segoe UI", 20, "bold"),
+            bg=BG_COLOR,
+            fg=TEXT_COLOR,
+        )
+        title.pack(anchor="w")
+
+        subtitle = tk.Label(
+            header,
+            text="Saisie simple des appareils, puis calcul de la puissance solaire et de la batterie.",
+            font=("Segoe UI", 10),
+            bg=BG_COLOR,
+            fg=MUTED_COLOR,
+        )
+        subtitle.pack(anchor="w", pady=(4, 0))
+
+        # Card used for the input form.
+        form = ttk.LabelFrame(
+            container,
+            text="Ajouter un appareil",
+            style="Card.TLabelframe",
+        )
+        form.pack(fill="x", pady=(0, 14))
+
+        # The form stays on one line to keep the layout compact.
         ttk.Label(form, text="Nom").grid(
             row=0,
             column=0,
@@ -82,9 +198,15 @@ class AppareilApp:
             row=0, column=8, padx=8, pady=8
         )
 
-        table_frame = ttk.LabelFrame(self.root, text="Appareils saisis")
-        table_frame.pack(fill="both", expand=True, padx=12, pady=(0, 12))
+        # Card used for the saved usages table.
+        table_frame = ttk.LabelFrame(
+            container,
+            text="Appareils saisis",
+            style="Card.TLabelframe",
+        )
+        table_frame.pack(fill="both", expand=True, pady=(0, 14))
 
+        # Only the useful columns are shown to the user.
         columns = (
             "util_id",
             "nom",
@@ -97,20 +219,24 @@ class AppareilApp:
             columns=columns,
             show="headings",
             height=14,
+            style="Minimal.Treeview",
         )
 
+        # Column titles are short so the table stays readable.
         self.tree.heading("util_id", text="ID")
         self.tree.heading("nom", text="Nom")
         self.tree.heading("puissance", text="Puissance (W)")
         self.tree.heading("tranche", text="Tranche")
         self.tree.heading("duree", text="Durée (h)")
 
+        # Size each column according to the expected content.
         self.tree.column("util_id", width=70, anchor="center")
         self.tree.column("nom", width=250)
         self.tree.column("puissance", width=150, anchor="e")
         self.tree.column("tranche", width=100, anchor="center")
         self.tree.column("duree", width=120, anchor="e")
 
+        # Add a vertical scrollbar for long histories.
         scrollbar = ttk.Scrollbar(
             table_frame,
             orient="vertical",
@@ -118,6 +244,7 @@ class AppareilApp:
         )
         self.tree.configure(yscrollcommand=scrollbar.set)
 
+        # Place the list and the scrollbar side by side.
         self.tree.pack(
             side="left",
             fill="both",
@@ -127,21 +254,25 @@ class AppareilApp:
         )
         scrollbar.pack(side="right", fill="y", padx=(0, 8), pady=8)
 
-        actions = ttk.Frame(self.root)
-        actions.pack(fill="x", padx=12, pady=(0, 12))
+        # Keep the action row visually separated from the content card.
+        actions = tk.Frame(container, bg=BG_COLOR)
+        actions.pack(fill="x")
 
         ttk.Button(
             actions,
             text="Supprimer",
             command=self.supprimer,
+            style="Ghost.TButton",
         ).pack(side="left")
         ttk.Button(
             actions,
             text="Calculer",
             command=self.calculer,
+            style="Minimal.TButton",
         ).pack(side="right")
 
     def _load_tranches(self):
+        # Load the predefined tranches and expose them in the combo box.
         rows = db.get_tranches()
         if not rows:
             raise RuntimeError("Aucune tranche disponible dans la base.")
@@ -157,6 +288,7 @@ class AppareilApp:
             self.tranche_combo.current(0)
 
     def _refresh_tree(self):
+        # Refresh the table from the database state.
         for item in self.tree.get_children():
             self.tree.delete(item)
 
@@ -184,6 +316,7 @@ class AppareilApp:
             )
 
     def ajouter(self):
+            # Read and normalize form inputs before validation.
         nom = self.nom_var.get().strip()
         puissance_raw = self.puissance_var.get().strip()
         tranche_label = self.tranche_var.get().strip()
@@ -200,6 +333,7 @@ class AppareilApp:
             )
             return
 
+        # Convert numbers only after the text checks succeed.
         try:
             puissance_w = float(puissance_raw)
             duree_h = float(duree_raw)
@@ -224,6 +358,7 @@ class AppareilApp:
             )
             return
 
+        # Each tranche has a maximum duration linked to its time slot.
         max_duree = {"T1": 11.0, "T2": 2.0, "T3": 11.0}
         if duree_h > max_duree.get(tranche_label, 24.0):
             messagebox.showwarning(
@@ -233,12 +368,14 @@ class AppareilApp:
             return
 
         try:
+            # Save the appliance and its usage in one transaction.
             db.add_appareil_with_utilisation(
                 nom=nom,
                 puissance_w=puissance_w,
                 tranche_id=self.tranches_by_label[tranche_label],
                 duree_h=duree_h,
             )
+            # Reset the fields the user is expected to fill again.
             self.nom_var.set("")
             self.puissance_var.set("")
             self.duree_var.set("")
@@ -247,6 +384,7 @@ class AppareilApp:
             messagebox.showerror("Erreur DB", f"Insertion impossible:\n{exc}")
 
     def supprimer(self):
+        # Force a deliberate selection before deleting anything.
         selected = self.tree.selection()
         if not selected:
             messagebox.showinfo(
@@ -257,6 +395,7 @@ class AppareilApp:
 
         util_id = int(selected[0])
         try:
+            # Delete the selected row and refresh the table immediately.
             db.delete_utilisation(util_id)
             self._refresh_tree()
         except Exception as exc:
@@ -266,9 +405,11 @@ class AppareilApp:
             )
 
     def calculer(self):
+        # Run the theoretical and practical sizing steps.
         try:
             theorique = calculer_theorique()
             resultat = calculer_pratique(theorique)
+            # Persist the current calculation for later reference.
             db.save_resultat(
                 resultat["panneau_theorique_w"],
                 resultat["panneau_achat_w"],
@@ -282,19 +423,23 @@ class AppareilApp:
             )
             return
 
+        # Open the dedicated result window after successful computation.
         ResultsWindow(self.root, resultat, self.reset_form)
 
     def reset_form(self):
+        # Clear the form so the next entry starts from a blank state.
         self.nom_var.set("")
         self.puissance_var.set("")
         self.duree_var.set("")
         if self.tranche_combo["values"]:
             self.tranche_combo.current(0)
+        # Bring the main window back to the foreground.
         self.root.lift()
         self.root.focus_force()
 
 
 if __name__ == "__main__":
+    # Standard Tk bootstrap for the app entry point.
     root = tk.Tk()
     app = AppareilApp(root)
     root.mainloop()

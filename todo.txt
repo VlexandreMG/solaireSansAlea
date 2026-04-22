@@ -287,3 +287,42 @@ n'oublie le workflow dans ce fichier et les commentaires dans la fonction
 je veux que dans l'input , on ne donne plus le nombre d'heure , 
 mais l'heure de début et l'heure de fin . 
 Tu règle l'affichage de la liste en conséquent 
+
+- Toujours avec le worflow dans todo.txt et plein de commentaire sur la fonction 
+j'aimerais que tu me fasse une fonction qui convertis la puissance réduite en wattheure , 
+en multipliant la puissance réduite avec l'heure total utilisé par les appareils
+
+     WORKFLOW DE CONVERSION PUISSANCE REDUITE -> WH:
+     ==============================================
+     1. calculer_puissance_reduite_wh(puissance_reduite_w)
+         - lance la conversion de la puissance reduite
+         - prend la puissance reduite en entree
+
+     2. Lecture des usages dans la base
+         - la fonction recupere toutes les utilisations avec list_utilisations()
+         - chaque ligne donne la puissance et la duree de l'utilisation
+
+     3. Calcul de l'heure totale utilisee
+         - on additionne toutes les durees des appareils
+         - on obtient l'heure totale d'utilisation pour toute la maison
+
+     4. Conversion en wattheure
+         - energie_reduite_wh = puissance_reduite_w * heures_totales_utilisation_h
+         - plus la duree totale est grande, plus l'energie finale augmente
+
+     5. Verification de securite
+         - si le resultat est negatif, on le remet a 0
+         - cela garde un resultat coherent pour l'affichage et les calculs
+
+     6. Retour de la fonction
+         - la fonction retourne la puissance reduite, le total d'heures et le resultat en Wh
+
+     RESULTAT ATTENDU:
+     ===============
+     - puissance_reduite_w
+     - heures_totales_utilisation_h
+     - energie_reduite_wh
+
+- Toujours avec le worflow dans todo.txt et plein de commentaire sur la fonction 
+j'aimerais que tu me fasse une fonction qui convertis la puissance réduite en wattheure , 
+en multipliant la puissance réduite avec l'heure total utilisé par les appareils 

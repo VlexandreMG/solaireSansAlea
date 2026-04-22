@@ -224,4 +224,68 @@ def calculer_puissance_restante_pratique(puissance_max_w):
         "puissance_restante_t3_w": puissance_restante_t3_w,
         "puissance_restante_totale_w": puissance_restante_totale_w,
     }
+
+
+def calculer_puissance_reduite_wh(puissance_reduite_w):
+    """
+    Convert a reduced power value into energy in watt-hours.
+
+    The goal of this helper is to take the reduced power that remains after the
+    practical sizing rules and convert it into an equivalent energy value by
+    multiplying it with the total number of hours used by all devices.
+
+    Workflow:
+    1. Convert the reduced power to float for a safe numeric calculation.
+    2. Retrieve all usages from the database with their duration.
+    3. Sum every usage duration to get the total time used by the devices.
+    4. Multiply the reduced power by the total duration to obtain Wh.
+    5. Clamp negative values to zero so the result stays physically valid.
+    6. Return a dictionary with the input power, total hours, and final Wh.
+
+    Args:
+        puissance_reduite_w (float): Reduced power value in Watts.
+
+    Returns:
+        dict: A dictionary containing:
+            - 'puissance_reduite_w': Reduced power in Watts
+            - 'heures_totales_utilisation_h': Total usage duration in hours
+            - 'energie_reduite_wh': Converted energy in Watt-hours
+    """
+
+    # Step 1: Convert the incoming power to float before doing any math.
+    puissance_reduite_w = float(puissance_reduite_w)
+
+    # Step 2: Start with zero total usage time.
+    heures_totales_utilisation_h = 0.0
+
+    # Step 3: Load every appliance usage from the database.
+    utilisations = list_utilisations()
+
+    # Step 4: Add the duration of each usage to the running total.
+    for (
+        _util_id,
+        _appareil_id,
+        _nom,
+        _puissance_w,
+        _tranche_id,
+        _label,
+        _heure_debut,
+        _heure_fin,
+        duree_h,
+    ) in utilisations:
+        heures_totales_utilisation_h += float(duree_h)
+
+    # Step 5: Multiply reduced power by total time to get energy in Wh.
+    energie_reduite_wh = puissance_reduite_w * heures_totales_utilisation_h
+
+    # Step 6: Keep the result non-negative for consistency.
+    if energie_reduite_wh < 0:
+        energie_reduite_wh = 0.0
+
+    # Step 7: Return a compact payload for the UI or future calculations.
+    return {
+        "puissance_reduite_w": puissance_reduite_w,
+        "heures_totales_utilisation_h": heures_totales_utilisation_h,
+        "energie_reduite_wh": energie_reduite_wh,
+    }
  

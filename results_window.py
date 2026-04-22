@@ -24,8 +24,8 @@ class ResultsWindow(tk.Toplevel):
     def __init__(self, master, resultats, on_new_calculation):
         super().__init__(master)
         self.title("Solaire - Résultats")
-        # Keep enough vertical room for all cards including remaining power.
-        self.geometry("760x720")
+        # Keep enough vertical room for all cards including conversion values.
+        self.geometry("760x800")
         self.minsize(700, 620)
         self.resizable(True, True)
         self.configure(background=BG_COLOR)
@@ -54,7 +54,8 @@ class ResultsWindow(tk.Toplevel):
         # 1) Build the main container and header.
         # 2) Display theoretical and practical purchase sections.
         # 3) Display the practical remaining power section by tranche.
-        # 4) Show summary text and action button.
+        # 4) Display the reduced-power conversion section in Wh.
+        # 5) Show summary text and action button.
 
         # Main container with airy margins.
         container = tk.Frame(self, bg=BG_COLOR, padx=20, pady=20)
@@ -163,6 +164,41 @@ class ResultsWindow(tk.Toplevel):
                 highlight=True,
             )
 
+        # Display the Wh conversion requested for reduced practical power.
+        # This block reads the payload added in AppareilApp.calculer and shows:
+        # - reduced power in W/kW
+        # - total usage hours
+        # - converted energy in Wh/kWh
+        conversion = self._resultats.get("conversion_puissance_reduite_wh")
+        if conversion:
+            self._build_section(
+                container,
+                "Conversion puissance reduite en wattheure",
+                CARD_COLOR,
+                TEXT_COLOR,
+                [
+                    (
+                        "Puissance reduite",
+                        conversion["puissance_reduite_w"],
+                        "W",
+                        "kW",
+                    ),
+                    (
+                        "Heures totales utilisees",
+                        conversion["heures_totales_utilisation_h"],
+                        "h",
+                        "h",
+                    ),
+                    (
+                        "Energie reduite",
+                        conversion["energie_reduite_wh"],
+                        "Wh",
+                        "kWh",
+                    ),
+                ],
+                highlight=True,
+            )
+
         # One short sentence summarizes the final answer.
         resume = (
             "Avec vos appareils, vous avez besoin d'un panneau de "
@@ -238,6 +274,9 @@ class ResultsWindow(tk.Toplevel):
         for label, value, unit, converted_unit in rows:
             if unit == "W":
                 converted = _format_kw(value)
+            elif unit == "h":
+                # Hours are already in their base unit, no conversion needed.
+                converted = value
             else:
                 converted = _format_kwh(value)
             if unit == "Wh":

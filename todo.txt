@@ -326,3 +326,33 @@ en multipliant la puissance réduite avec l'heure total utilisé par les apparei
 - Toujours avec le worflow dans todo.txt et plein de commentaire sur la fonction 
 j'aimerais que tu me fasse une fonction qui convertis la puissance réduite en wattheure , 
 en multipliant la puissance réduite avec l'heure total utilisé par les appareils 
+
+- Maitenant je veux que tu affiche le résultat de la conversion en wattheure dans result_window.
+N'oublie pas le workflow dans todo.txt et les commentaires 
+
+     WORKFLOW D'AFFICHAGE DE LA CONVERSION WH DANS result_window.py:
+     ===============================================================
+     1. AppareilApp.calculer()
+         - calcule theorique + pratique
+         - lit la puissance restante totale pratique (en W)
+         - appelle calculer_puissance_reduite_wh(...)
+         - injecte le resultat dans resultat["conversion_puissance_reduite_wh"]
+
+     2. ResultsWindow.__init__()
+         - recupere toutes les donnees dans self._resultats
+         - appelle _build_ui() pour construire les cartes de sortie
+
+     3. ResultsWindow._build_ui()
+         - conserve les cartes existantes (theorique, achat, reste pratique)
+         - lit conversion = self._resultats.get("conversion_puissance_reduite_wh")
+         - si present, affiche une nouvelle carte de conversion
+
+     4. Carte "Conversion puissance reduite en wattheure"
+         - affiche puissance_reduite_w en W et kW
+         - affiche heures_totales_utilisation_h en heures
+         - affiche energie_reduite_wh en Wh et kWh
+
+     5. Commentaires dans le code
+         - commentaires de workflow dans AppareilApp.calculer
+         - commentaires de workflow dans ResultsWindow._build_ui
+         - commentaire technique dans _build_section pour le cas unite "h"

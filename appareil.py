@@ -3,6 +3,7 @@ from tkinter import messagebox, ttk
 
 from calculations import (
     calculer_pratique,
+    calculer_puissance_reduite_wh,
     calculer_puissance_restante_pratique,
     calculer_theorique,
 )
@@ -494,6 +495,16 @@ class AppareilApp:
             resultat["puissance_restante_pratique"] = (
                 calculer_puissance_restante_pratique(
                     resultat["panneau_achat_w"]
+                )
+            )
+
+            # Convert the reduced practical remaining power into Wh so the
+            # result window can display an energy-oriented value as requested.
+            resultat["conversion_puissance_reduite_wh"] = (
+                calculer_puissance_reduite_wh(
+                    resultat["puissance_restante_pratique"][
+                        "puissance_restante_totale_w"
+                    ]
                 )
             )
 

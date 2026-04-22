@@ -19,6 +19,8 @@ def calculer_theorique():
         puissance_w,
         _tranche_id,
         label,
+        _heure_debut,
+        _heure_fin,
         duree_h,
     ) in utilisations:
         energie_wh = float(puissance_w) * float(duree_h)
@@ -110,6 +112,8 @@ def calculer_puissance_restante(puissance_max_w):
         puissance_w,
         _tranche_id,
         _label,
+        _heure_debut,
+        _heure_fin,
         _duree_h,
     ) in utilisations:
         # Add this device's power to total consumption
@@ -170,6 +174,8 @@ def calculer_puissance_restante_pratique(puissance_max_w):
         puissance_w,
         _tranche_id,
         label,
+        _heure_debut,
+        _heure_fin,
         _duree_h,
     ) in utilisations:
         puissance_ajoutee_w = float(puissance_w)

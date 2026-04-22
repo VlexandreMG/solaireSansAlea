@@ -282,3 +282,8 @@ n'oublie le workflow dans ce fichier et les commentaires dans la fonction
      5. Commentaires dans la fonction
          - la fonction _build_ui() contient des commentaires de workflow
          - les blocs importants sont commentes pour expliquer l'ordre d'affichage
+
+- Petit correction dans les affichages , 
+je veux que dans l'input , on ne donne plus le nombre d'heure , 
+mais l'heure de début et l'heure de fin . 
+Tu règle l'affichage de la liste en conséquent 

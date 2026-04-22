@@ -85,6 +85,8 @@ def add_appareil_with_utilisation(
     nom,
     puissance_w,
     tranche_id,
+    heure_debut,
+    heure_fin,
     duree_h,
 ):
     appareil_id = _next_id("appareils")
@@ -109,12 +111,14 @@ def add_appareil_with_utilisation(
                 heure_fin,
                 duree_h
             )
-            VALUES (?, ?, ?, NULL, NULL, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 utilisation_id,
                 appareil_id,
                 tranche_id,
+                heure_debut,
+                heure_fin,
                 duree_h,
             ),
         )
@@ -133,6 +137,8 @@ def list_utilisations():
                 a.puissance_w,
                 t.id,
                 t.label,
+                u.heure_debut,
+                u.heure_fin,
                 u.duree_h
             FROM utilisations u
             INNER JOIN appareils a ON a.id = u.appareil_id

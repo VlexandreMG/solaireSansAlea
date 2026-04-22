@@ -19,6 +19,12 @@ MUTED_COLOR = "#52606d"
 ACCENT_COLOR = "#2f6f9f"
 ACCENT_DARK = "#24577d"
 
+TRANCHE_HOURS = {
+    "T1": (6.0, 17.0),
+    "T2": (17.0, 19.0),
+    "T3": (19.0, 6.0),
+}
+
 
 class AppareilApp:
     def __init__(self, root):
@@ -186,20 +192,32 @@ class AppareilApp:
         )
         self.tranche_combo.grid(row=0, column=5, padx=8, pady=8, sticky="w")
 
-        ttk.Label(form, text="Durée (h)").grid(
+        ttk.Label(form, text="Heure début").grid(
             row=0,
             column=6,
             padx=8,
             pady=8,
             sticky="w",
         )
-        self.duree_var = tk.StringVar()
-        ttk.Entry(form, textvariable=self.duree_var, width=10).grid(
+        self.heure_debut_var = tk.StringVar()
+        ttk.Entry(form, textvariable=self.heure_debut_var, width=10).grid(
             row=0, column=7, padx=8, pady=8, sticky="w"
         )
 
+        ttk.Label(form, text="Heure fin").grid(
+            row=0,
+            column=8,
+            padx=8,
+            pady=8,
+            sticky="w",
+        )
+        self.heure_fin_var = tk.StringVar()
+        ttk.Entry(form, textvariable=self.heure_fin_var, width=10).grid(
+            row=0, column=9, padx=8, pady=8, sticky="w"
+        )
+
         ttk.Button(form, text="Ajouter", command=self.ajouter).grid(
-            row=0, column=8, padx=8, pady=8
+            row=0, column=10, padx=8, pady=8
         )
 
         # Card used for the saved usages table.
@@ -216,6 +234,8 @@ class AppareilApp:
             "nom",
             "puissance",
             "tranche",
+            "heure_debut",
+            "heure_fin",
             "duree",
         )
         self.tree = ttk.Treeview(
@@ -231,14 +251,18 @@ class AppareilApp:
         self.tree.heading("nom", text="Nom")
         self.tree.heading("puissance", text="Puissance (W)")
         self.tree.heading("tranche", text="Tranche")
+        self.tree.heading("heure_debut", text="Début")
+        self.tree.heading("heure_fin", text="Fin")
         self.tree.heading("duree", text="Durée (h)")
 
         # Size each column according to the expected content.
         self.tree.column("util_id", width=70, anchor="center")
-        self.tree.column("nom", width=250)
+        self.tree.column("nom", width=220)
         self.tree.column("puissance", width=150, anchor="e")
         self.tree.column("tranche", width=100, anchor="center")
-        self.tree.column("duree", width=120, anchor="e")
+        self.tree.column("heure_debut", width=80, anchor="center")
+        self.tree.column("heure_fin", width=80, anchor="center")
+        self.tree.column("duree", width=100, anchor="e")
 
         # Add a vertical scrollbar for long histories.
         scrollbar = ttk.Scrollbar(
@@ -296,6 +320,11 @@ class AppareilApp:
         for item in self.tree.get_children():
             self.tree.delete(item)
 
+        def _format_hour(hour_value):
+            if hour_value is None:
+                return "--"
+            return f"{float(hour_value):.2f}"
+
         rows = db.list_utilisations()
         for (
             util_id,
@@ -304,6 +333,8 @@ class AppareilApp:
             puissance_w,
             _tranche_id,
             label,
+            heure_debut,
+            heure_fin,
             duree_h,
         ) in rows:
             self.tree.insert(
@@ -315,16 +346,33 @@ class AppareilApp:
                     nom,
                     puissance_w,
                     label,
+                    _format_hour(heure_debut),
+                    _format_hour(heure_fin),
                     f"{float(duree_h):.2f}",
                 ),
             )
 
+    def _is_hour_in_tranche(self, hour_value, tranche_label):
+        start, end = TRANCHE_HOURS[tranche_label]
+
+        if start < end:
+            return start <= hour_value <= end
+
+        return hour_value >= start or hour_value <= end
+
+    def _compute_duration_hours(self, heure_debut, heure_fin):
+        duration = heure_fin - heure_debut
+        if duration <= 0:
+            duration += 24.0
+        return duration
+
     def ajouter(self):
-            # Read and normalize form inputs before validation.
+        # Read and normalize form inputs before validation.
         nom = self.nom_var.get().strip()
         puissance_raw = self.puissance_var.get().strip()
         tranche_label = self.tranche_var.get().strip()
-        duree_raw = self.duree_var.get().strip()
+        heure_debut_raw = self.heure_debut_var.get().strip()
+        heure_fin_raw = self.heure_fin_var.get().strip()
 
         if not nom:
             messagebox.showwarning("Validation", "Le nom est obligatoire.")
@@ -340,11 +388,12 @@ class AppareilApp:
         # Convert numbers only after the text checks succeed.
         try:
             puissance_w = float(puissance_raw)
-            duree_h = float(duree_raw)
+            heure_debut = float(heure_debut_raw)
+            heure_fin = float(heure_fin_raw)
         except ValueError:
             messagebox.showwarning(
                 "Validation",
-                "Puissance et durée doivent être numériques.",
+                "Puissance, heure début et heure fin doivent être numériques.",
             )
             return
 
@@ -355,12 +404,35 @@ class AppareilApp:
             )
             return
 
-        if duree_h <= 0:
+        if not (0.0 <= heure_debut < 24.0) or not (0.0 <= heure_fin < 24.0):
             messagebox.showwarning(
                 "Validation",
-                "La durée doit être > 0.",
+                "Les heures doivent être entre 0 et 23.99.",
             )
             return
+
+        if heure_debut == heure_fin:
+            messagebox.showwarning(
+                "Validation",
+                "Heure début et heure fin doivent être différentes.",
+            )
+            return
+
+        if not self._is_hour_in_tranche(heure_debut, tranche_label):
+            messagebox.showwarning(
+                "Validation",
+                "L'heure de début n'est pas dans la tranche sélectionnée.",
+            )
+            return
+
+        if not self._is_hour_in_tranche(heure_fin, tranche_label):
+            messagebox.showwarning(
+                "Validation",
+                "L'heure de fin n'est pas dans la tranche sélectionnée.",
+            )
+            return
+
+        duree_h = self._compute_duration_hours(heure_debut, heure_fin)
 
         # Each tranche has a maximum duration linked to its time slot.
         max_duree = {"T1": 11.0, "T2": 2.0, "T3": 11.0}
@@ -377,12 +449,15 @@ class AppareilApp:
                 nom=nom,
                 puissance_w=puissance_w,
                 tranche_id=self.tranches_by_label[tranche_label],
+                heure_debut=heure_debut,
+                heure_fin=heure_fin,
                 duree_h=duree_h,
             )
             # Reset the fields the user is expected to fill again.
             self.nom_var.set("")
             self.puissance_var.set("")
-            self.duree_var.set("")
+            self.heure_debut_var.set("")
+            self.heure_fin_var.set("")
             self._refresh_tree()
         except Exception as exc:
             messagebox.showerror("Erreur DB", f"Insertion impossible:\n{exc}")
@@ -443,7 +518,8 @@ class AppareilApp:
         # Clear the form so the next entry starts from a blank state.
         self.nom_var.set("")
         self.puissance_var.set("")
-        self.duree_var.set("")
+        self.heure_debut_var.set("")
+        self.heure_fin_var.set("")
         if self.tranche_combo["values"]:
             self.tranche_combo.current(0)
         # Bring the main window back to the foreground.

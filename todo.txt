@@ -121,29 +121,88 @@ Et montre moi le workflow de la fonction dans todo.txt et rempli la fonction de 
 - Je veux que tu change le design de l'interface maintenant . Change le en minimaliste mais bien . 
 Ajoute le workflow de l'affichage dans todo.txt et met plein de commentaire sur tous le code de l'interface 
 
-     WORKFLOW DE L'AFFICHAGE MINIMALISTE:
-     ===================================
-     1. Ouvrir la fenetre principale avec un fond clair et une taille confortable
-     2. Appliquer un theme simple et uniforme aux boutons, tableaux et cadres
-     3. Afficher un titre principal et un sous-titre court pour guider l'utilisateur
-     4. Regrouper la saisie dans une carte propre avec les champs alignes horizontalement
-     5. Afficher la liste des appareils dans un tableau lisible avec une scrollbar
-     6. Mettre les actions importantes en bas de la fenetre:
-         - supprimer en style discret
-         - calculer en style accentue
-     7. Ouvrir la fenetre de resultats avec le meme style minimaliste
-     8. Montrer les resultats sous forme de cartes simples:
-         - calcul theorique
-         - achat conseille
-     9. Ajouter un resume clair pour que l'utilisateur comprenne vite le resultat
-     10. Proposer un bouton "Nouveau calcul" pour revenir a la saisie
+      WORKFLOW DE L'AFFICHAGE MINIMALISTE:
+      ===================================
+      1. AppareilApp.__init__()
+          - lance la fenetre principale
+          - configure la taille, le fond clair et le style global
+          - charge les tranches fixes depuis la base de donnees
 
-     OBJECTIF VISUEL:
-     ===============
-     - Peu de couleurs
-     - Beaucoup d'espace blanc
-     - Textes courts et lisibles
-     - Une seule couleur d'accent
-     - Une interface propre, simple et moderne
+      2. AppareilApp._setup_styles()
+          - definit le theme minimaliste commun
+          - applique les couleurs, boutons et tableaux sobres
+          - uniformise l'apparence de toute l'interface
 
-Refait le workflow du dessus en rajoutant cette fonction fait ceci , celle_là fait cela etc 
+      3. AppareilApp._build_ui()
+          - construit la page principale
+          - affiche le titre et le sous-titre
+          - place la carte de saisie des appareils
+          - affiche la table des appareils saisis
+          - place les boutons supprimer et calculer
+
+      4. AppareilApp._load_tranches()
+          - lit les tranches depuis la base
+          - remplit la liste deroulante T1, T2, T3
+          - selectionne automatiquement la premiere tranche
+
+      5. AppareilApp._refresh_tree()
+          - vide la table avant chaque mise a jour
+          - relit les utilisations en base
+          - affiche les appareils avec puissance, tranche et duree
+
+      6. AppareilApp.ajouter()
+          - lit les champs du formulaire
+          - verifie le nom, la puissance, la tranche et la duree
+          - enregistre l'appareil et son utilisation dans la base
+          - nettoie le formulaire apres insertion
+
+      7. AppareilApp.supprimer()
+          - controle qu'une ligne est selectionnee
+          - supprime l'utilisation choisie dans la base
+          - rafraichit la table apres suppression
+
+      8. AppareilApp.calculer()
+          - appelle calculer_theorique()
+          - appelle calculer_pratique()
+          - sauvegarde le resultat dans la base
+          - ouvre la fenetre des resultats
+
+      9. AppareilApp.reset_form()
+          - vide les champs de saisie
+          - remet la premiere tranche par defaut
+          - remet la fenetre principale au premier plan
+
+      10. ResultsWindow.__init__()
+            - ouvre la fenetre de resultats
+            - applique le meme style minimaliste
+            - garde le resultat en memoire pour l'affichage
+
+      11. ResultsWindow._setup_styles()
+            - configure le style local des boutons de resultats
+            - conserve une apparence simple et legere
+
+      12. ResultsWindow._build_ui()
+            - cree le conteneur principal
+            - affiche le titre et le sous-titre
+            - montre la carte du calcul theorique
+            - montre la carte de l'achat conseille
+            - affiche le resume final
+            - ajoute l'explication sur les tranches horaires
+            - place le bouton Nouveau calcul
+
+      13. ResultsWindow._build_section()
+            - construit chaque bloc de resultat
+            - affiche les valeurs en W et Wh avec conversion en kW et kWh
+            - garde une presentation claire et compacte
+
+      14. ResultsWindow._new_calculation()
+            - relance le flux de saisie depuis la fenetre principale
+            - ferme la fenetre de resultats
+
+      OBJECTIF VISUEL:
+      ===============
+      - Peu de couleurs
+      - Beaucoup d'espace blanc
+      - Textes courts et lisibles
+      - Une seule couleur d'accent
+      - Une interface propre, simple et moderne

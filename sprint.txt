@@ -69,4 +69,3 @@ Ajouter un récapitulatif textuel lisible, par exemple :
 
 Bouton "Nouveau calcul" qui vide la saisie et repart de zéro.
 
-

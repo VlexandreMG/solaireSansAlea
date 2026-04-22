@@ -61,3 +61,70 @@ def calculer_pratique(theorique):
         }
     )
     return resultat
+
+
+def calculer_puissance_restante(puissance_max_w):
+    """
+    Calculate the remaining power not used by all devices.
+    
+    This function calculates how much power is still available after all
+    connected devices consume their required power.
+    
+    Workflow:
+    1. Get the maximum power capacity of the solar panel (in Watts)
+    2. Retrieve all devices from the database with their power consumption
+    3. Sum up the total power consumed by all devices
+    4. Calculate remaining power = max power - total consumed power
+    5. Return the remaining power value
+    
+    Args:
+        puissance_max_w (float): Maximum available power from solar panel (in Watts)
+    
+    Returns:
+        dict: A dictionary containing:
+            - 'puissance_max_w': The maximum available power
+            - 'puissance_utilisee_w': Total power consumed by all devices
+            - 'puissance_restante_w': Remaining unused power
+    
+    Example:
+        >>> result = calculer_puissance_restante(300)
+        >>> # If devices consume 200W total:
+        >>> # result['puissance_restante_w'] would be 100W
+    """
+    
+    # Step 1: Convert input to float for calculation safety
+    puissance_max_w = float(puissance_max_w)
+    
+    # Step 2: Initialize total consumed power
+    puissance_utilisee_w = 0.0
+    
+    # Step 3: Retrieve all device utilisations from database
+    utilisations = list_utilisations()
+    
+    # Step 4: Sum up power consumption of all devices
+    # Each utilisation contains the device's power rating
+    for (
+        _util_id,
+        _appareil_id,
+        _nom,
+        puissance_w,
+        _tranche_id,
+        _label,
+        _duree_h,
+    ) in utilisations:
+        # Add this device's power to total consumption
+        puissance_utilisee_w += float(puissance_w)
+    
+    # Step 5: Calculate remaining power
+    puissance_restante_w = puissance_max_w - puissance_utilisee_w
+    
+    # Step 6: Ensure remaining power is not negative (safety check)
+    if puissance_restante_w < 0:
+        puissance_restante_w = 0.0
+    
+    # Step 7: Return result dictionary with all values
+    return {
+        "puissance_max_w": puissance_max_w,
+        "puissance_utilisee_w": puissance_utilisee_w,
+        "puissance_restante_w": puissance_restante_w,
+    }

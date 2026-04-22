@@ -81,4 +81,40 @@ BASES : sql server
                         passport: id_demandeur, num passport, date delivrance, date expiration,pays delivrance
                         id passport est le plus utilise
 
+- (C'est Balou maintenant) Je veux que tu me fasse une fonction qui me calcule ,
+la puissance restante non utilisé par les appareils au total . 
+    par exemple : 
+        Le pique maximale est à 300W ,
+        un appareil a 200W comme puissance , 
+        la puissance restante est donc 100W 
+Et montre moi le workflow de la fonction dans todo.txt et rempli la fonction de commentaire
+
+    ✅ FONCTION CRÉÉE: calculer_puissance_restante(puissance_max_w) dans calculations.py
+    
+    WORKFLOW DE LA FONCTION:
+    =======================
+    1. Valider et convertir la puissance maximale en float (sécurité de calcul)
+    2. Initialiser le compteur de puissance utilisée à 0
+    3. Récupérer toutes les utilisations d'appareils depuis la base de données via list_utilisations()
+    4. Boucler sur chaque utilisation et accumuler la puissance de chaque appareil:
+       - Chaque appareil a une puissance_w définie
+       - On additionne toutes les puissances pour obtenir la consommation totale
+    5. Calculer la puissance restante = puissance_max_w - puissance_utilisee_w
+    6. Effectuer une vérification de sécurité: si le résultat est négatif, mettre à 0
+    7. Retourner un dictionnaire contenant:
+       - puissance_max_w: puissance maximale disponible du panneau
+       - puissance_utilisee_w: somme de toutes les puissances des appareils
+       - puissance_restante_w: la puissance non utilisée (max - utilisée)
+    
+    EXEMPLE D'UTILISATION:
+    ======================
+    result = calculer_puissance_restante(300)  # 300W disponibles
+    # Si les appareils connectés consomment: TV(75W) + Frigo(100W) + PC(85W) = 260W
+    # result['puissance_restante_w'] = 300 - 260 = 40W
+    
+    La fonction est entièrement commentée dans calculations.py avec:
+    - Docstring détaillée
+    - Commentaires ligne par ligne expliquant chaque étape
+    - Paramètres et retours documentés
+    - Exemples d'usage 
 

@@ -236,8 +236,9 @@ def calculer_puissance_reduite_wh(puissance_reduite_w):
 
     Workflow:
     1. Convert the reduced power to float for a safe numeric calculation.
-    2. Retrieve all usages from the database with their duration.
-    3. Sum every usage duration to get the total time used by the devices.
+     2. Retrieve all usages from the database with their duration.
+     3. Sum usage duration only for T1 and T2 (solar production window).
+         T3 is excluded because the panel does not produce at night.
     4. Multiply the reduced power by the total duration to obtain Wh.
     5. Clamp negative values to zero so the result stays physically valid.
     6. Return a dictionary with the input power, total hours, and final Wh.
@@ -261,19 +262,21 @@ def calculer_puissance_reduite_wh(puissance_reduite_w):
     # Step 3: Load every appliance usage from the database.
     utilisations = list_utilisations()
 
-    # Step 4: Add the duration of each usage to the running total.
+    # Step 4: Add duration only when the usage belongs to T1 or T2.
+    # T3 (night) is intentionally excluded from panel-energy conversion.
     for (
         _util_id,
         _appareil_id,
         _nom,
         _puissance_w,
         _tranche_id,
-        _label,
+        label,
         _heure_debut,
         _heure_fin,
         duree_h,
     ) in utilisations:
-        heures_totales_utilisation_h += float(duree_h)
+        if label in ("T1", "T2"):
+            heures_totales_utilisation_h += float(duree_h)
 
     # Step 5: Multiply reduced power by total time to get energy in Wh.
     energie_reduite_wh = puissance_reduite_w * heures_totales_utilisation_h

@@ -356,3 +356,8 @@ N'oublie pas le workflow dans todo.txt et les commentaires
          - commentaires de workflow dans AppareilApp.calculer
          - commentaires de workflow dans ResultsWindow._build_ui
          - commentaire technique dans _build_section pour le cas unite "h"
+         
+- En faite , dans la fonction de conversion , 
+rajoutte juste une condition qui regarde tant que le temps est en T1 ou en T2 ,
+on addition l'heure utilisé , on ne prends pas en compte T3 car 
+de 19h et 6h , le panneau ne marche pas 

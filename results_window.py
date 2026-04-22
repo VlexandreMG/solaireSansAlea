@@ -24,9 +24,10 @@ class ResultsWindow(tk.Toplevel):
     def __init__(self, master, resultats, on_new_calculation):
         super().__init__(master)
         self.title("Solaire - Résultats")
-        self.geometry("700x470")
-        self.minsize(660, 440)
-        self.resizable(False, False)
+        # Keep enough vertical room for all cards including remaining power.
+        self.geometry("760x720")
+        self.minsize(700, 620)
+        self.resizable(True, True)
         self.configure(background=BG_COLOR)
 
         # Keep the data and the callback available for the result view.

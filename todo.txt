@@ -1,0 +1,84 @@
+but: faire entrer comme input tous les materiels qu'on utilise a la maison avec les heures d'utilisations (ex: utilisation de la tele le matin durant 2h, le soir durant 3h, ordi, frigo, ........)
+--avec la puissance (Tv, maraina adin'ny roa , 75W ; frigo , matin durant 3, 100W; tv, soir durant 3 , 75; pc .....85.....)
+output : le systeme propose les caracteristiques (puissance) du panneau a acheter et de la batterie aussi par rapport aux materiels utilises
+
+COMMENT ? 
+    [le panneau solaire donne une puissance en whatt (1000 W = 1kW)]
+    la batterie c'est le magazinage de puissance,qui donnera une unite : watt heure (kW heure)
+        ex: si la batterie est 1 kW heure (1000 watt heure), et que j'y branche qlq chose de 100 W, c a t que la batterie peu dure
+                10h 
+            De meme pour le chargement de la batterie par le panneau solaire 
+            Pour le rechargement de la batterie
+                500 W->1h
+                1000 W ->? =>2h
+    
+    Pour les materiels y a des tranches :
+        ex: t1: tv: 6-17h (matin)
+            t2: tv:17-19h  (soir)
+            t3: tv:19-6h (nuit)
+    
+    on definit la tranche qu'on ajoute les materiels:
+        ex: la tv marche pendant 2H dans la tranche d'heure du matin
+            la tv marche pendant 1h dans la tranche d'heure du soir
+            la tv marche pendant 3h dans la tranche d'heure du nuit
+                                    +
+                                puissance
+    Pourquoi ajouter des tranches?
+        ->  de 6 a 17h ce sont les panneaux solaire qui travaillent non pas les batteries
+                c un facteur pour savoir combien de whatt ou kw on doit utiliser pour le panneau solaire
+                tous les materiels entre cet intervalle compte et c de la qu'on obtient par rapport combien de 
+                what de panneau solaire on a besoin
+            Durant la nuit ce sont les batteries qui travaillent, et revient a tout a l'heure :
+                ex: la batt a une puissance de 1kwh et je branche qlq chose de 500w dessus, elle peut durer
+                        jusqu'a 2h
+                c un des facteur pour savoir la puissance de batterie a utiliser
+
+    A l'arrivee du jour on recharge les batterie du coup, les panneaux vont devoir recharger les batt et les materiels en meme temps
+        du coup de 6 a 17h , elle prend 11h a etre totalement chargees a 100%
+    Et revient pour travailler la nuit 
+
+PRATIQUE: apres calculs de la puissance de chacun pour batterie et panneaux qu'on a besoin :
+    pour les panneau, seule les 40% de sa puissance travaillent
+        ex: si j'achete un panneau de 2500 W ca va pas me donner 2500 W mais 1000 W 
+    pour les batterie, on ajoute 50%, ex : le systeme dit que je dois utiliser une batt de 1000 W heure alors
+        ce que je dois vraiment acheter c une batterie de 1500wh (un genre de marge)
+    C'est ce que le systeme va propose a la fin, l'autre c theorique mais la celui qu'on devrait acheter on va dire 
+    Et puis :
+        dans la journee, pour le panneau de 2500 W on n'obtient que 1000 W du coup, du coup a partir de 17h on obtient 500 W, a la fin d'apres midi
+        car y a plus assez de soleil et seul 50% sont utilises c'est ce qui a donne 500 W
+        et puis 19h arrive, les batterie se mettent au travail
+
+Du coup au final y a une saisie de materiel ( puissance, tranche d'heure, temps d'utilisation), puis le systeme, apres clacul theorique et pratique dit 
+selon les materiels que vous avez inseres vous avez besoin de x W de panneau (kW) et y W heure (kW heure) de batterie
+
+On considere qu'on a consomme toute la batterie la nuit, puis on recharge
+
+TECHNO : python fenetree
+BASES : sql server
+
+
+    
+
+  fin : generation de visa (invistisseur, travailleur) et carte de residence
+
+    contrainte: 
+        le visa transformable doit etre reconu par l'etat (juste introduction)
+        on suppose qu'il a pas de donnees de depart 
+
+    sprint1: demande de visa (transformable): investisseur sy travailleur ihany dans la selection Nouveau titre :
+                formulaire d'etat civil, piece justificatifs (cases a cocher), info specifique requises selon le choix du titre (travailleur, investisseur)
+                c'est en possession de visa transformable qu'on peut faire une demande
+                si choisi investisseur dans nouveau titre tous les infos sur ca apparaissent pour ce qui sont des champs a completer
+                Le num de passport ne change pas 
+                Met aussi dans le choix avec nouveau titre, transfert de visa (carte resident+ new passport ou juste passport) et duplicata (doublon) mais on se concentre dans nouveau titre pour ce sprint 1
+                ->formulaire de saisie pour investisseur et trvailleur ( toujours nouveau titre)
+                Pour les pieces y a ce qui sont obligatoires et ce qui sont optionnels
+                Seuls les pieces obligatoires coches ou completes met le statut du demande en demande creee
+                    enregistre dans la base, afin d'updater au cas ou 
+                    obligatoire => nom, date naissance,adresse mada,nationalite, numero
+                    non obligatoires => prenom,email
+                        situation fam , nationalite, demande,demandeur, table mitokana 
+                        passport: id_demandeur, num passport, date delivrance, date expiration,pays delivrance
+                        id passport est le plus utilise
+
+

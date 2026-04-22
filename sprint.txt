@@ -1,0 +1,72 @@
+SPRINT 1
+Crée la base de données SQL Server avec les tables suivantes :
+
+- appareils (id INT PK, nom VARCHAR, puissance_w FLOAT)
+- tranches (id INT PK, label VARCHAR, heure_debut INT, heure_fin INT)
+  → insérer 3 tranches fixes : T1(6-17), T2(17-19), T3(19-6)
+- utilisations (id INT PK, appareil_id FK, tranche_id FK, duree_h FLOAT)
+- resultats (id INT PK, date_calcul DATETIME, panneau_theorique_w FLOAT,
+  panneau_achat_w FLOAT, batterie_theorique_wh FLOAT, batterie_achat_wh FLOAT)
+
+SPRINT 2
+Crée une fenêtre Tkinter principale avec :
+- Un formulaire d'ajout d'appareil : champ nom, champ puissance (W),
+  sélecteur de tranche horaire (T1/T2/T3 via combobox), champ durée (heures)
+- Bouton "Ajouter" → insère dans SQL Server (tables appareils + utilisations)
+- Un tableau (Treeview) listant tous les appareils saisis avec leurs tranches
+- Bouton "Supprimer" pour retirer une ligne
+- Bouton "Calculer" (déclenche Sprint 3)
+
+La connexion SQL Server est centralisée dans un module db.py.
+
+SPRINT 3
+Crée une fonction Python "calculer_theorique()" qui :
+
+1. Récupère toutes les utilisations depuis SQL Server
+2. Calcule l'énergie par tranche :
+   - T1 (6h-17h, 11h dispo soleil) : somme(puissance_w × duree_h) → énergie_T1_wh
+   - T2 (17h-19h) : somme(puissance_w × duree_h) → énergie_T2_wh
+   - T3 (19h-6h) : somme(puissance_w × duree_h) → énergie_T3_wh
+
+3. Calcule les besoins théoriques :
+   - Batterie théorique (Wh) = énergie_T3_wh
+     (la nuit (c'est a partir de 19h que la batterie se met au travail) )
+   - Panneau théorique (W) = (énergie_T1_wh + T2_wh + batterie_theorique_wh) ÷ (temps du rechargement de la batterie de 6h a 17h =11h par exemple )
+     (le panneau doit alimenter T1 et t2 ET recharger la batterie en 11h)
+
+Retourne un dict avec panneau_theorique_w et batterie_theorique_wh.
+
+SPRINT 4
+Crée une fonction "calculer_pratique(theorique)" qui applique les corrections réelles :
+
+- Panneau à acheter (W) = panneau_theorique_w × 0.5
+  (car seuls 40% de la puissance nominale sont exploitables en conditions réelles)
+  
+- Batterie à acheter (Wh) = batterie_theorique_wh × 1.5
+  (marge de sécurité de 50% pour ne pas vider complètement la batterie)
+
+Exemple attendu :
+  - Théorique panneau = 1000 W → à acheter = 2500 W
+  - Théorique batterie = 1000 Wh → à acheter = 1500 Wh
+
+Retourne un dict complet avec les 4 valeurs (théoriques + pratiques).
+Sauvegarde le résultat dans la table SQL Server "resultats".
+
+SPRINT 5
+Crée une fenêtre Tkinter de résultats affichant, après calcul :
+
+Section "Calcul théorique" :
+  - Panneau : X W (Y kW)
+  - Batterie : X Wh (Y kWh)
+
+Section "Ce que vous devez acheter" (en évidence, couleur différente) :
+  - Panneau solaire : X W (Y kW)
+  - Batterie : X Wh (Y kWh)
+
+Ajouter un récapitulatif textuel lisible, par exemple :
+  "Avec vos appareils, vous avez besoin d'un panneau de 2500 W
+   et d'une batterie de 1500 Wh."
+
+Bouton "Nouveau calcul" qui vide la saisie et repart de zéro.
+
+

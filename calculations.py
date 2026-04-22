@@ -1,4 +1,4 @@
-from db import list_utilisations
+from db import list_tarifs, list_utilisations
 
 
 RECHARGE_HOURS = 11.0
@@ -290,5 +290,70 @@ def calculer_puissance_reduite_wh(puissance_reduite_w):
         "puissance_reduite_w": puissance_reduite_w,
         "heures_totales_utilisation_h": heures_totales_utilisation_h,
         "energie_reduite_wh": energie_reduite_wh,
+    }
+
+
+def calculer_prix_tarifaire_wh(conversion_puissance_reduite_wh):
+    """
+    Calculate the cost of Wh energy for the journalier and weekend tariffs.
+
+    Workflow:
+    1. Read the Wh conversion payload already computed by the app.
+    2. Load tariff rows from the database.
+    3. Resolve the unit price for the journalier and weekend tariffs.
+    4. Multiply the Wh energy by each tariff price.
+    5. Return the detailed prices and costs for both tariffs.
+
+    Args:
+        conversion_puissance_reduite_wh (dict): Payload returned by
+            calculer_puissance_reduite_wh(...).
+
+    Returns:
+        dict: Unit prices and total costs for journalier and weekend.
+    """
+
+    energie_wh = float(conversion_puissance_reduite_wh.get("energie_reduite_wh", 0.0))
+
+    tarifs = list_tarifs()
+    prix_par_nom = {}
+    prix_par_ordre = []
+
+    for _tarif_id, _type_journee_id, nom_type_journee, prix in tarifs:
+        prix_float = float(prix)
+        prix_par_ordre.append(prix_float)
+
+        nom_normalise = str(nom_type_journee or "").strip().upper()
+        if nom_normalise:
+            prix_par_nom[nom_normalise] = prix_float
+
+    def _resolve_price(label, fallback_index):
+        candidats = [label, label.upper(), label.lower()]
+        for candidat in candidats:
+            prix = prix_par_nom.get(str(candidat).upper())
+            if prix is not None:
+                return prix
+
+        if len(prix_par_ordre) >= fallback_index:
+            return prix_par_ordre[fallback_index - 1]
+
+        return 0.0
+
+    prix_journalier = _resolve_price("journalier", 1)
+    prix_weekend = _resolve_price("weekend", 2)
+
+    cout_journalier = energie_wh * prix_journalier
+    cout_weekend = energie_wh * prix_weekend
+
+    if cout_journalier < 0:
+        cout_journalier = 0.0
+    if cout_weekend < 0:
+        cout_weekend = 0.0
+
+    return {
+        "energie_wh": energie_wh,
+        "prix_journalier": prix_journalier,
+        "prix_weekend": prix_weekend,
+        "cout_journalier": cout_journalier,
+        "cout_weekend": cout_weekend,
     }
  

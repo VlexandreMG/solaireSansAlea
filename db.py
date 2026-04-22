@@ -149,6 +149,24 @@ def list_utilisations():
         return cur.fetchall()
 
 
+def list_tarifs():
+    with get_connection() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+                t.id,
+                t.id_type_journee,
+                j.nom,
+                t.prix
+            FROM tarif t
+            LEFT JOIN type_journee j ON j.id = t.id_type_journee
+            ORDER BY t.id
+            """
+        )
+        return cur.fetchall()
+
+
 def delete_utilisation(utilisation_id):
     with get_connection() as conn:
         cur = conn.cursor()

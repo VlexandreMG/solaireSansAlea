@@ -3,6 +3,7 @@ from tkinter import messagebox, ttk
 
 from calculations import (
     calculer_pratique,
+    calculer_prix_tarifaire_wh,
     calculer_puissance_reduite_wh,
     calculer_puissance_restante_pratique,
     calculer_theorique,
@@ -506,6 +507,11 @@ class AppareilApp:
                         "puissance_restante_totale_w"
                     ]
                 )
+            )
+
+            # Compute the journalier/weekend tariff costs from the Wh value.
+            resultat["prix_tarifaire_wh"] = calculer_prix_tarifaire_wh(
+                resultat["conversion_puissance_reduite_wh"]
             )
 
             # Persist the current calculation for later reference.

@@ -55,7 +55,8 @@ class ResultsWindow(tk.Toplevel):
         # 2) Display theoretical and practical purchase sections.
         # 3) Display the practical remaining power section by tranche.
         # 4) Display the reduced-power conversion section in Wh.
-        # 5) Show summary text and action button.
+            # 5) Display the tariff-based journalier/weekend pricing section.
+            # 6) Show summary text and action button.
 
         # Main container with airy margins.
         container = tk.Frame(self, bg=BG_COLOR, padx=20, pady=20)
@@ -199,6 +200,44 @@ class ResultsWindow(tk.Toplevel):
                 highlight=True,
             )
 
+            # Display the tariff outputs for journalier and weekend.
+            # The Wh value is multiplied by each tariff unit price.
+            prix_tarifaire = self._resultats.get("prix_tarifaire_wh")
+            if prix_tarifaire:
+                self._build_section(
+                    container,
+                    "Prix selon le tarif",
+                    SOFT_ACCENT,
+                    TEXT_COLOR,
+                    [
+                        (
+                            "Tarif journalier",
+                            prix_tarifaire["prix_journalier"],
+                            "Ar/Wh",
+                            "Ar/Wh",
+                        ),
+                        (
+                            "Coût journalier",
+                            prix_tarifaire["cout_journalier"],
+                            "Ar",
+                            "Ar",
+                        ),
+                        (
+                            "Tarif weekend",
+                            prix_tarifaire["prix_weekend"],
+                            "Ar/Wh",
+                            "Ar/Wh",
+                        ),
+                        (
+                            "Coût weekend",
+                            prix_tarifaire["cout_weekend"],
+                            "Ar",
+                            "Ar",
+                        ),
+                    ],
+                    highlight=True,
+                )
+
         # One short sentence summarizes the final answer.
         resume = (
             "Avec vos appareils, vous avez besoin d'un panneau de "
@@ -298,7 +337,11 @@ class ResultsWindow(tk.Toplevel):
 
             value_label = tk.Label(
                 row,
-                text=f"{value:.2f} {unit} ({converted:.2f} {converted_unit})",
+                    text=(
+                        f"{value:.2f} {unit} ({converted:.2f} {converted_unit})"
+                        if unit in ("W", "Wh")
+                        else f"{value:.2f} {unit}"
+                    ),
                 bg=bg_color,
                 fg=fg_color,
                 font=("Segoe UI", 10, "bold" if highlight else "normal"),

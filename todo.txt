@@ -361,3 +361,37 @@ N'oublie pas le workflow dans todo.txt et les commentaires
 rajoutte juste une condition qui regarde tant que le temps est en T1 ou en T2 ,
 on addition l'heure utilisé , on ne prends pas en compte T3 car 
 de 19h et 6h , le panneau ne marche pas 
+
+- Ouiii ça maaarche , maintenant , 
+fais moi une fonction qui calcule le prix du puissance en wattheure , 
+par rapport à ces 2 tarifs(journalier , weekend) ,
+dans la fonction , je veux que tu additionne le prix du tarif avec la puissance en wattheure .
+Rajoute les réponses des 2 tarifs dans result_window et n'oublie pas le workflow dans le todo.txt , 
+et les commentaires dans la fonction et l'affichage  
+
+     WORKFLOW DU CALCUL TARIFAIRE JOURNALIER / WEEKEND:
+     ==================================================
+     1. calculer_prix_tarifaire_wh(conversion_puissance_reduite_wh)
+         - prend le resultat en wattheure
+         - recupere les tarifs journalier et weekend depuis la base
+
+     2. Lecture des tarifs
+         - la fonction lit les lignes de la table tarif avec list_tarifs()
+         - elle recupere aussi le nom de type_journee pour savoir quel prix va avec quel tarif
+
+     3. Calcul du prix journalier
+         - cout_journalier = energie_wh * prix_journalier
+         - le resultat correspond au cout si l'energie est appliquee au tarif de jour
+
+     4. Calcul du prix weekend
+         - cout_weekend = energie_wh * prix_weekend
+         - le resultat correspond au cout si l'energie est appliquee au tarif weekend
+
+     5. Affichage result_window.py
+         - une nouvelle carte affiche le tarif unitaire et le cout pour journalier et weekend
+         - l'affichage reste simple, lisible et minimaliste
+
+     RESULTAT ATTENDU:
+     ===============
+     - prix_journalier / prix_weekend
+     - cout_journalier / cout_weekend

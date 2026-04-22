@@ -218,3 +218,4 @@ def calculer_puissance_restante_pratique(puissance_max_w):
         "puissance_restante_t3_w": puissance_restante_t3_w,
         "puissance_restante_totale_w": puissance_restante_totale_w,
     }
+ 

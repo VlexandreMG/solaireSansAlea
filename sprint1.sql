@@ -1,4 +1,4 @@
--- Active: 1774366055843@@127.0.0.1@5432
+-- Active: 1776393259495@@localhost@1433@solaire_db
 
 CREATE DATABASE solaire_db;
 GO
@@ -33,11 +33,7 @@ CREATE TABLE utilisations (
     tranche_id INT NOT NULL,
     duree_h FLOAT NOT NULL,
     heure_debut FLOAT NULL,
-    heure_fin FLOAT NULL,
-    CONSTRAINT FK_utilisations_appareils
-        FOREIGN KEY (appareil_id) REFERENCES appareils(id),
-    CONSTRAINT FK_utilisations_tranches
-        FOREIGN KEY (tranche_id) REFERENCES tranches(id)
+    heure_fin FLOAT NULL
 );
 GO
 
@@ -50,3 +46,14 @@ CREATE TABLE resultats (
     batterie_achat_wh FLOAT NOT NULL
 );
 GO
+
+CREATE TABLE type_journee (
+    id INT NOT NULL PRIMARY KEY,
+    nom VARCHAR(100)
+);
+
+CREATE TABLE tarif (
+    id INT NOT NULL PRIMARY KEY,
+    id_type_journee INT NOT NULL,
+    prix FLOAT NOT NULL
+);
